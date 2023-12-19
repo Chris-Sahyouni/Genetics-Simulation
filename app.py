@@ -23,6 +23,7 @@ RAT_STATS = {
     # 'Albino': 0
 }
 
+MESSAGES = []
 
 
 def gameLoop():
@@ -48,7 +49,7 @@ def gameLoop():
         side_panel = pygame.Rect(0, 0, 235, 720)
         screen.fill(pygame.Color('gray50'), side_panel)
 
-        renderSelectivePressures(screen)
+        displaySelectivePressures(screen)
         pred_buttons = plusMinusButtons(screen, (118, 26))
         pred_plus = pred_buttons[0]
         pred_minus = pred_buttons[1]
@@ -61,6 +62,7 @@ def gameLoop():
         buttons = [pred_plus, pred_minus, temp_plus, temp_minus, fa_plus, fa_minus]
 
         displayRatStats(screen)
+        displayMessages(screen)
 
         RATS.draw(screen)
         RATS.update(clock.get_time())
@@ -81,8 +83,7 @@ def newGeneration():
     for rat in RATS:
         if rat.reproduction_ready:
             REPRODUCE_QUEUE.append(rat)
-    # n = len(REPRODUCE_QUEUE)
-    # for male, female in zip(REPRODUCE_QUEUE[0:n/2], REPRODUCE_QUEUE[n/2:])
+
     while len(REPRODUCE_QUEUE) > 1:
         male = np.random.choice(REPRODUCE_QUEUE)
         REPRODUCE_QUEUE.remove(male)
@@ -92,16 +93,17 @@ def newGeneration():
         for gene in new_rat.phenotype:
             RAT_STATS[gene] += 1
         RATS.add(new_rat)
+        addMessage("A rat is born")
 
 def killRats():
     global RATS, RAT_STATS
     for rat in RATS:
         if not rat.isalive:
-            print('killing rat')
             rat.kill()
             RATS.remove(rat)
             for gene in rat.phenotype:
                 RAT_STATS[gene] -= 1
+            addMessage('A rat is murdered')
 
 
 def displayRatStats(screen):
@@ -128,8 +130,17 @@ def displayRatStats(screen):
         y += 30
 
 
+def displayMessages(screen):
+    global MESSAGES
+    y = 360
+    font = pygame.font.Font('fonts/autumn.ttf', 14)
+    color = pygame.Color('white')
+    for message in MESSAGES:
+        screen.blit(font.render(message, True, color), (15, y))
+        y += 25
 
-def renderSelectivePressures(screen):
+
+def displaySelectivePressures(screen):
     global PREDATION, TEMPERATURE, FOOD_AVAILABILITY
     font = pygame.font.Font('fonts/autumn.ttf', 22)
     color = pygame.Color('black')
@@ -191,6 +202,12 @@ def checkParamChange(event, button, index):
         if index == 5:
             if FOOD_AVAILABILITY > 1:
                 FOOD_AVAILABILITY -= 1
+
+def addMessage(message):
+    global MESSAGES
+    MESSAGES.insert(0, message)
+    if len(MESSAGES) > 20:
+        MESSAGES.pop()
 
 
 gameLoop()
