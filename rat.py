@@ -12,6 +12,7 @@ give rats id
 vertical movement
 in terms of movement, instead of doing an if still for every potential move, could set direction to 0
 you have to call .kill() on the rats' sprites in addition to removing them from rats
+fullscreen mode
 '''
 
 
@@ -28,8 +29,8 @@ class Rat(pygame.sprite.Sprite):
         self.image = self.selectImage()
         self.surf = self.image
         self.rect = self.randomStartPos()
-        self.size = 20
-        self.direction = 0
+        self.size = self.determineSize()
+        self.direction = np.random.choice([-1, 1])
         self.time_till = self.setRandomTime()
         self.speed = self.setSpeed()
 
@@ -59,6 +60,12 @@ class Rat(pygame.sprite.Sprite):
                 phenotype.append(gene[0])
         return phenotype
 
+    def determineSize(self):
+        if self.phenotype[2] == 'R':
+            return 25
+        return 15
+
+
     def selectImage(self):
         if self.phenotype[0] == 'D':
             img = None
@@ -86,16 +93,16 @@ class Rat(pygame.sprite.Sprite):
 
     def setSpeed(self):
         if self.phenotype[1] == 'A':
-            return .3
+            return 3
         else:
-            return .05
+            return 1
 
     # this represents either the time spent moving or the time spent until moving depending of if still or not
     def setRandomTime(self):
         if self.direction == 0:
-            return np.random.gamma(1, 2) * 1000
+            return np.random.gamma(10, 20) * 10000
         else:
-            return np.random.gamma(1, 2) * 100
+            return np.random.gamma(10, 20) * 1000
 
 
 
@@ -109,6 +116,7 @@ class Rat(pygame.sprite.Sprite):
                 self.direction = 0
             self.setRandomTime()
         self.rect[0] += self.speed * self.direction
+
 
     def draw(self, screen):
         screen.blit(self.surf, self.rect.topleft)
