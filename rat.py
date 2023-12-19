@@ -7,10 +7,8 @@ NUM_TRAITS = 3
 '''
 calculate lifespan,
 number of offspring,
-scale with size, motion,
 give rats id
 vertical movement
-in terms of movement, instead of doing an if still for every potential move, could set direction to 0
 you have to call .kill() on the rats' sprites in addition to removing them from rats
 fullscreen mode
 mutations
@@ -38,6 +36,8 @@ class Rat(pygame.sprite.Sprite):
         self.num_offspring = 0
         self.time_alive = 0
         self.reproduction_ready = False
+        self.lifespan = 14
+        self.isalive = True
 
 
     @staticmethod
@@ -53,8 +53,8 @@ class Rat(pygame.sprite.Sprite):
         female.num_offspring += 1
         male.reproduction_ready = False
         female.reproduction_ready = False
-        print(child_genotype)
         return Rat(child_genotype)
+
 
 
     def expressPhenotype(self):
@@ -68,7 +68,6 @@ class Rat(pygame.sprite.Sprite):
                 phenotype.append(gene[0].upper())
             else:
                 phenotype.append(gene[0])
-        print(phenotype)
         return phenotype
 
 
@@ -132,6 +131,9 @@ class Rat(pygame.sprite.Sprite):
 
         if self.num_offspring < self.max_offspring and self.time_alive >= (self.num_offspring + 1) * 6000:
             self.reproduction_ready = True
+
+        if self.time_alive >= self.lifespan * 1000:
+            self.isalive = False
 
 
 

@@ -65,6 +65,7 @@ def gameLoop():
         RATS.draw(screen)
         RATS.update(clock.get_time())
         newGeneration()
+        killRats()
 
         clock.tick(60)
         pygame.display.update()
@@ -92,6 +93,16 @@ def newGeneration():
             RAT_STATS[gene] += 1
         RATS.add(new_rat)
 
+def killRats():
+    global RATS, RAT_STATS
+    for rat in RATS:
+        if not rat.isalive:
+            print('killing rat')
+            rat.kill()
+            RATS.remove(rat)
+            for gene in rat.phenotype:
+                RAT_STATS[gene] -= 1
+
 
 def displayRatStats(screen):
     global RAT_STATS, RATS
@@ -104,6 +115,7 @@ def displayRatStats(screen):
         'd': 'Light'
     }
     y = 150
+    n = len(RATS) or 1
     color = pygame.Color('black')
     font = pygame.font.Font('fonts/autumn.ttf', 16)
     screen.blit(font.render('#', True, color), (80, 130))
@@ -111,7 +123,7 @@ def displayRatStats(screen):
     for gene in RAT_STATS:
         screen.blit(font.render(geneToWord[gene], True, color), (15, y))
         screen.blit(font.render(str(RAT_STATS[gene]), True, color), (80, y))
-        percent = "{:.1f}".format((RAT_STATS[gene] / len(RATS)) * 100)
+        percent = "{:.1f}".format((RAT_STATS[gene] / n) * 100)
         screen.blit(font.render(percent, True, color), (110, y))
         y += 30
 
