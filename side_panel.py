@@ -34,24 +34,26 @@ def plusMinusButtons(screen, location, param_name, param):
     minus = font.render('-', True, black)
     screen.blit(plus, (x + 2, y - 8))
     screen.blit(minus, (x + 4, y))
-    for event in pygame.event.get():
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if plus_box.collidepoint(event.pos):
-                print(param_name)
-                gray_plus = pygame.Color('gray30')
-            if minus_box.collidepoint(event.pos):
-                print(param_name)
-                gray_minus = pygame.Color('gray30')
-            pygame.display.update()
+    return (plus_box, minus_box)
 
-        if event.type == pygame.MOUSEBUTTONUP:
-            if plus_box.collidepoint(event.pos):
-                gray_plus = pygame.Color('gray60')
-                adjustParameter(param_name, param, 1)
-            if minus_box.collidepoint(event.pos):
-                gray_minus = pygame.Color('gray60')
-                adjustParameter(param_name, param, -1)
-            pygame.display.update()
+    # for event in pygame.event.get():
+    #     if event.type == pygame.MOUSEBUTTONDOWN:
+    #         if plus_box.collidepoint(event.pos):
+    #             print(param_name)
+    #             gray_plus = pygame.Color('gray30')
+    #         # if minus_box.collidepoint(event.pos):
+    #         #     print(param_name)
+    #         #     gray_minus = pygame.Color('gray30')
+    #         pygame.display.update()
+
+    #     if event.type == pygame.MOUSEBUTTONUP:
+    #         if plus_box.collidepoint(event.pos):
+    #             gray_plus = pygame.Color('gray60')
+    #             adjustParameter(param_name, param, 1)
+    #         # if minus_box.collidepoint(event.pos):
+    #         #     gray_minus = pygame.Color('gray60')
+    #         #     adjustParameter(param_name, param, -1)
+    #         pygame.display.update()
 
 
 
@@ -64,6 +66,3 @@ def renderSelectivePressures(screen, predation, temperature, foodAv):
         (font.render('Temperature:', True, color), (15, 50)),
         (font.render('Food Availability:', True, color), (15, 80))
     ])
-    plusMinusButtons(screen, (118, 30), 'pred', predation)
-    plusMinusButtons(screen, (145, 60), 'temp', temperature)
-    plusMinusButtons(screen, (184, 90), 'fa', foodAv)
