@@ -13,6 +13,7 @@ vertical movement
 in terms of movement, instead of doing an if still for every potential move, could set direction to 0
 you have to call .kill() on the rats' sprites in addition to removing them from rats
 fullscreen mode
+mutations
 '''
 
 
@@ -60,6 +61,7 @@ class Rat(pygame.sprite.Sprite):
                 phenotype.append(gene[0])
         return phenotype
 
+
     def determineSize(self):
         if self.phenotype[2] == 'R':
             return 25
@@ -77,15 +79,15 @@ class Rat(pygame.sprite.Sprite):
 
 
     def randomStartPos(self):
-        x = np.random.randint(30, 1000)
+        x = np.random.randint(300, 1000)
         y = np.random.randint(500, 650)
         return [x, y]
 
 
     def setDirection(self):
-        if self.rect[1] < 60:
+        if self.rect[1] < 235 + self.size:
             self.direction = 1
-        elif self.rect[1] > 1220:
+        elif self.rect[1] > 1220 - self.size:
             self.direction = -1
         else:
             self.direction = np.random.choice([-1, 1])
@@ -109,7 +111,7 @@ class Rat(pygame.sprite.Sprite):
     def update(self, time_elapsed):
         pygame.sprite.Sprite.update(self, time_elapsed)
         self.time_till -= time_elapsed
-        if self.time_till <= 0 or self.rect[0] < 80 or self.rect[0] > 1200:
+        if self.time_till <= 0 or self.rect[0] < 235 + self.size or self.rect[0] > 1200 - self.size:
             if self.direction == 0:
                 self.setDirection()
             else:

@@ -1,7 +1,6 @@
 import pygame
 import numpy as np
 from rat import Rat
-from side_panel import *
 
 # this can be used to pass all areas in need of updating to update() at once for efficiency
 # UPDATE_REGIONS = []
@@ -9,6 +8,20 @@ from side_panel import *
 PREDATION = 6
 TEMPERATURE = 65
 FOOD_AVAILABILITY = 6
+RAT_STATS = {
+    'A': 2,
+    'a': 0,
+    'R': 2,
+    'r': 0,
+    'D': 2,
+    'd': 0,
+    # 'Metabolic': 0,
+    # 'Paralyzed': 0,
+    # 'Sprint?': 0,
+    # 'Albino': 0
+}
+
+
 
 def gameLoop():
     global PREDATION, TEMPERATURE, FOOD_AVAILABILITY
@@ -32,7 +45,7 @@ def gameLoop():
                     checkParamChange(event, button, i)
 
         screen.blit(bg, [0,0])
-        side_panel = pygame.Rect(0, 0, 220, 720)
+        side_panel = pygame.Rect(0, 0, 235, 720)
         screen.fill(pygame.Color('gray50'), side_panel)
 
         renderSelectivePressures(screen)
@@ -47,6 +60,8 @@ def gameLoop():
         fa_minus = fa_buttons[1]
         buttons = [pred_plus, pred_minus, temp_plus, temp_minus, fa_plus, fa_minus]
 
+        displayRatStats(screen)
+
         RATS.draw(screen)
         RATS.update(clock.get_time())
 
@@ -54,6 +69,29 @@ def gameLoop():
         pygame.display.update()
 
     pygame.quit()
+
+
+# ---------------------------------------------------------------------------- #
+
+
+def displayRatStats(screen):
+    global RAT_STATS
+    geneToWord = {
+        'A': 'Agile',
+        'a': 'Slow',
+        'R': 'Rotund',
+        'r': 'Skinny',
+        'D': 'Dark',
+        'd': 'Light'
+    }
+    y = 120
+    color = pygame.Color('black')
+    font = pygame.font.Font('fonts/autumn.ttf', 16)
+    for gene in RAT_STATS:
+        screen.blit(font.render(geneToWord[gene], True, color), (15, y))
+        screen.blit(font.render(str(RAT_STATS[gene]), True, color), (80, y))
+        y += 20
+
 
 
 def renderSelectivePressures(screen):
@@ -118,8 +156,6 @@ def checkParamChange(event, button, index):
         if index == 5:
             if FOOD_AVAILABILITY > 1:
                 FOOD_AVAILABILITY -= 1
-
-
 
 
 gameLoop()
