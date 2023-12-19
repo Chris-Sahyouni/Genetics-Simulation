@@ -8,6 +8,7 @@ from rat import Rat
 PREDATION = 6
 TEMPERATURE = 65
 FOOD_AVAILABILITY = 6
+RATS = pygame.sprite.Group()
 RAT_STATS = {
     'A': 2,
     'a': 0,
@@ -24,11 +25,9 @@ RAT_STATS = {
 
 
 def gameLoop():
-    global PREDATION, TEMPERATURE, FOOD_AVAILABILITY
-
+    global PREDATION, TEMPERATURE, FOOD_AVAILABILITY, RATS
     pygame.init()
     screen = pygame.display.set_mode((1280, 720))
-    RATS = pygame.sprite.Group()
     RATS.add(Rat([('D', 'd'), ('A', 'a'), ('R', 'r')]))
     RATS.add(Rat([('D', 'd'), ('A', 'a'), ('R', 'r')]))
     clock = pygame.time.Clock()
@@ -75,7 +74,7 @@ def gameLoop():
 
 
 def displayRatStats(screen):
-    global RAT_STATS
+    global RAT_STATS, RATS
     geneToWord = {
         'A': 'Agile',
         'a': 'Slow',
@@ -84,13 +83,17 @@ def displayRatStats(screen):
         'D': 'Dark',
         'd': 'Light'
     }
-    y = 120
+    y = 150
     color = pygame.Color('black')
     font = pygame.font.Font('fonts/autumn.ttf', 16)
+    screen.blit(font.render('#', True, color), (80, 130))
+    screen.blit(font.render('%', True, color), (110, 130))
     for gene in RAT_STATS:
         screen.blit(font.render(geneToWord[gene], True, color), (15, y))
         screen.blit(font.render(str(RAT_STATS[gene]), True, color), (80, y))
-        y += 20
+        percent = "{:.1f}".format((RAT_STATS[gene] / len(RATS)) * 100)
+        screen.blit(font.render(percent, True, color), (110, y))
+        y += 30
 
 
 
