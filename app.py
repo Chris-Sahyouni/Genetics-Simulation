@@ -9,6 +9,7 @@ PREDATION = 6
 TEMPERATURE = 65
 FOOD_AVAILABILITY = 6
 RATS = pygame.sprite.Group()
+REPRODUCE_QUEUE = []
 RAT_STATS = {
     'A': 2,
     'a': 0,
@@ -28,8 +29,8 @@ def gameLoop():
     global PREDATION, TEMPERATURE, FOOD_AVAILABILITY, RATS
     pygame.init()
     screen = pygame.display.set_mode((1280, 720))
-    RATS.add(Rat([('D', 'd'), ('A', 'a'), ('R', 'r')]))
-    RATS.add(Rat([('D', 'd'), ('A', 'a'), ('R', 'r')]))
+    RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']]))
+    RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']]))
     clock = pygame.time.Clock()
     bg = pygame.image.load('images/forest_bg.jpg')
     running = True
@@ -63,6 +64,7 @@ def gameLoop():
 
         RATS.draw(screen)
         RATS.update(clock.get_time())
+        newGeneration()
 
         clock.tick(60)
         pygame.display.update()
@@ -71,6 +73,24 @@ def gameLoop():
 
 
 # ---------------------------------------------------------------------------- #
+
+
+def newGeneration():
+    global RATS, REPRODUCE_QUEUE, RAT_STATS
+    for rat in RATS:
+        if rat.reproduction_ready:
+            REPRODUCE_QUEUE.append(rat)
+    # n = len(REPRODUCE_QUEUE)
+    # for male, female in zip(REPRODUCE_QUEUE[0:n/2], REPRODUCE_QUEUE[n/2:])
+    while len(REPRODUCE_QUEUE) > 1:
+        male = np.random.choice(REPRODUCE_QUEUE)
+        REPRODUCE_QUEUE.remove(male)
+        female = np.random.choice(REPRODUCE_QUEUE)
+        REPRODUCE_QUEUE.remove(female)
+        new_rat = Rat.reproduce(male, female)
+        for gene in new_rat.phenotype:
+            RAT_STATS[gene] += 1
+        RATS.add(new_rat)
 
 
 def displayRatStats(screen):

@@ -19,7 +19,7 @@ mutations
 
 class Rat(pygame.sprite.Sprite):
     ###
-    # genotype will be an array of 2-tuples, each tuple representing the two alleles for that gene
+    # genotype will be an array of lists of size 2, each list representing the two alleles for that gene
     # phenotype will be an array, each index representing the expressed gene
     # the order of genes will always be D/d: dark, A/a: agile, R/r: rotund
     ###
@@ -34,6 +34,10 @@ class Rat(pygame.sprite.Sprite):
         self.direction = np.random.choice([-1, 1])
         self.time_till = self.setRandomTime()
         self.speed = self.setSpeed()
+        self.max_offspring = 2
+        self.num_offspring = 0
+        self.time_alive = 0
+        self.reproduction_ready = False
 
 
     @staticmethod
@@ -41,24 +45,30 @@ class Rat(pygame.sprite.Sprite):
         global NUM_TRAITS
         child_genotype = []
         for i in range(NUM_TRAITS):
-            child_gene = ('', '')
+            child_gene = ['', '']
             child_gene[0] = male.genotype[i][np.random.randint(0, 2)]
             child_gene[1] = female.genotype[i][np.random.randint(0, 2)]
             child_genotype.append(child_gene)
+        male.num_offspring += 1
+        female.num_offspring += 1
+        male.reproduction_ready = False
+        female.reproduction_ready = False
+        print(child_genotype)
         return Rat(child_genotype)
 
 
     def expressPhenotype(self):
         global NUM_TRAITS
         phenotype = []
-        for i in  range(NUM_TRAITS):
+        for i in range(NUM_TRAITS):
             gene = self.genotype[i]
             if gene[0].isupper() and gene[1].isupper():
                 phenotype.append(gene[0])
-            elif (gene[0].isupper and gene[1].islower()) or (gene[0].islower() and gene[1].isupper()):
+            elif (gene[0].isupper() and gene[1].islower()) or (gene[0].islower() and gene[1].isupper()):
                 phenotype.append(gene[0].upper())
             else:
                 phenotype.append(gene[0])
+        print(phenotype)
         return phenotype
 
 
@@ -111,6 +121,7 @@ class Rat(pygame.sprite.Sprite):
     def update(self, time_elapsed):
         pygame.sprite.Sprite.update(self, time_elapsed)
         self.time_till -= time_elapsed
+        self.time_alive += time_elapsed
         if self.time_till <= 0 or self.rect[0] < 235 + self.size or self.rect[0] > 1200 - self.size:
             if self.direction == 0:
                 self.setDirection()
@@ -118,6 +129,10 @@ class Rat(pygame.sprite.Sprite):
                 self.direction = 0
             self.setRandomTime()
         self.rect[0] += self.speed * self.direction
+
+        if self.num_offspring < self.max_offspring and self.time_alive >= (self.num_offspring + 1) * 6000:
+            self.reproduction_ready = True
+
 
 
     def draw(self, screen):
