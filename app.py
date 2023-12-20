@@ -29,14 +29,18 @@ MESSAGES = []
 def gameLoop():
     global PREDATION, TEMPERATURE, FOOD_AVAILABILITY, RATS
     pygame.init()
+    print('-------------- New Game ----------------')
     screen = pygame.display.set_mode((1280, 720))
     env_params = (PREDATION, TEMPERATURE, FOOD_AVAILABILITY)
     RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], env_params))
     RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], env_params))
+    # make sure first 2 rats dont die instantly
+    for rat in RATS:
+        rat.lifespan = np.random.randint(9, 16)
     clock = pygame.time.Clock()
     bg = pygame.image.load('images/forest_bg.jpg')
     running = True
-
+    paused = False
 
     while running:
         for event in pygame.event.get():
@@ -45,6 +49,20 @@ def gameLoop():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for i, button in enumerate(buttons):
                     checkParamChange(event, button, i)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                paused = True
+
+        while paused:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    paused = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    for i, button in enumerate(buttons):
+                        checkParamChange(event, button, i)
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    paused = False
+
 
         screen.blit(bg, [0,0])
         side_panel = pygame.Rect(0, 0, 235, 720)
@@ -79,22 +97,23 @@ def gameLoop():
 # ---------------------------------------------------------------------------- #
 
 
+
+
 def newGeneration():
     global RATS, REPRODUCE_QUEUE, RAT_STATS, PREDATION, TEMPERATURE, FOOD_AVAILABILITY
     for rat in RATS:
-        if rat.reproduction_ready:
+        if rat.reproduction_ready and rat.isalive:
             REPRODUCE_QUEUE.append(rat)
     while len(REPRODUCE_QUEUE) > 1:
         male = np.random.choice(REPRODUCE_QUEUE)
         REPRODUCE_QUEUE.remove(male)
         female = np.random.choice(REPRODUCE_QUEUE)
         REPRODUCE_QUEUE.remove(female)
-        for i in range(2):
-            new_rat = Rat.reproduce(male, female, (PREDATION, TEMPERATURE, FOOD_AVAILABILITY))
-            for gene in new_rat.phenotype:
-                RAT_STATS[gene] += 1
-            RATS.add(new_rat)
-            addMessage("A rat is born")
+        new_rat = Rat.reproduce(male, female, (PREDATION, TEMPERATURE, FOOD_AVAILABILITY))
+        for gene in new_rat.phenotype:
+            RAT_STATS[gene] += 1
+        RATS.add(new_rat)
+    REPRODUCE_QUEUE.clear()
 
 
 def killRats():
@@ -105,8 +124,6 @@ def killRats():
             RATS.remove(rat)
             for gene in rat.phenotype:
                 RAT_STATS[gene] -= 1
-            addMessage('A rat is murdered')
-            print("Rat lived for:", rat.time_alive)
 
 
 def displayRatStats(screen):

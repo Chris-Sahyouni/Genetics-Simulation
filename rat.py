@@ -3,6 +3,8 @@ import pygame
 import math
 
 NUM_TRAITS = 3
+REPRODUCTION_RATE = 3
+
 
 # TODO:
 '''
@@ -25,18 +27,19 @@ class Rat(pygame.sprite.Sprite):
         super(Rat, self).__init__()
         self.genotype = genotype
         self.phenotype = self.expressPhenotype()
+        self.size = self.determineSize()
         self.image = self.selectImage()
         self.surf = self.image
         self.rect = self.randomStartPos()
-        self.size = self.determineSize()
         self.direction = np.random.choice([-1, 1])
         self.time_till = self.setRandomTime()
         self.speed = self.setSpeed()
-        self.max_offspring = 2
+        self.max_offspring = 6
         self.num_offspring = 0
         self.time_alive = 0
         self.reproduction_ready = False
-        self.lifespan = self.calculateLifespan(params)
+        self.score = self.calculateScore(params)
+        self.lifespan = self.lifespan()
         self.isalive = True
 
 
@@ -71,7 +74,21 @@ class Rat(pygame.sprite.Sprite):
         return phenotype
 
 
-    def calculateLifespan(self, params):
+    def lifespan(self):
+        lifespan = (self.score / 3) + 10
+        mortality_rate = 1 - ((self.score / 32) + .5)
+        mortality_rate /= 2
+        mortality_rate += .1
+        sterile = np.random.choice((True, False), p=[mortality_rate, 1 - mortality_rate])
+        # print('Rat mortality rate:', mortality_rate * 100)
+        if sterile:
+            lifespan = 3
+        # print('Rat will live for:', lifespan)
+        return lifespan
+
+
+
+    def calculateScore(self, params):
         pvector = list(params)
         pvector[1] /= 5
         pvector[1] -= 6
@@ -92,16 +109,15 @@ class Rat(pygame.sprite.Sprite):
                       [aval, 0, aval],
                       [0, -1*rval, 0]])
         score_vector = M @ pvector
-        mean = score_vector.mean()
-        return (mean / 2) + 8
+        # print(score_vector)
+        return score_vector.mean()
 
 
 
-    # this difference is not noticeable
     def determineSize(self):
         if self.phenotype[2] == 'R':
-            return 25
-        return 15
+            return 50
+        return 30
 
 
     def selectImage(self):
@@ -110,7 +126,7 @@ class Rat(pygame.sprite.Sprite):
             img = pygame.image.load('images/dark_rat.png')
         else:
             img = pygame.image.load('images/light_rat.png')
-        return pygame.transform.scale(img, (50, 50))
+        return pygame.transform.scale(img, (self.size, self.size))
 
 
 
@@ -156,13 +172,16 @@ class Rat(pygame.sprite.Sprite):
             self.setRandomTime()
         self.rect[0] += self.speed * self.direction
 
-        if self.num_offspring < self.max_offspring and self.time_alive >= (self.num_offspring + 2) * 2000:
-            self.reproduction_ready = True
 
         if self.time_alive >= self.lifespan * 1000:
+            # rat dies
             self.reproduction_ready = False
             self.isalive = False
 
+        elif self.num_offspring < self.max_offspring and self.time_alive >= 4000:
+            time_mature = self.time_alive - 4000
+            if time_mature >= self.num_offspring * REPRODUCTION_RATE * 1000:
+                self.reproduction_ready = True
 
 
     def draw(self, screen):
