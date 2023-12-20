@@ -19,7 +19,7 @@ RAT_STATS = {
     'd': 0,
     # 'Metabolic': 0,
     # 'Paralyzed': 0,
-    # 'Sprint?': 0,
+    # 'Sprint': 0,
     # 'Albino': 0
 }
 
@@ -30,8 +30,9 @@ def gameLoop():
     global PREDATION, TEMPERATURE, FOOD_AVAILABILITY, RATS
     pygame.init()
     screen = pygame.display.set_mode((1280, 720))
-    RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']]))
-    RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']]))
+    env_params = (PREDATION, TEMPERATURE, FOOD_AVAILABILITY)
+    RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], env_params))
+    RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], env_params))
     clock = pygame.time.Clock()
     bg = pygame.image.load('images/forest_bg.jpg')
     running = True
@@ -79,21 +80,22 @@ def gameLoop():
 
 
 def newGeneration():
-    global RATS, REPRODUCE_QUEUE, RAT_STATS
+    global RATS, REPRODUCE_QUEUE, RAT_STATS, PREDATION, TEMPERATURE, FOOD_AVAILABILITY
     for rat in RATS:
         if rat.reproduction_ready:
             REPRODUCE_QUEUE.append(rat)
-
     while len(REPRODUCE_QUEUE) > 1:
         male = np.random.choice(REPRODUCE_QUEUE)
         REPRODUCE_QUEUE.remove(male)
         female = np.random.choice(REPRODUCE_QUEUE)
         REPRODUCE_QUEUE.remove(female)
-        new_rat = Rat.reproduce(male, female)
-        for gene in new_rat.phenotype:
-            RAT_STATS[gene] += 1
-        RATS.add(new_rat)
-        addMessage("A rat is born")
+        for i in range(2):
+            new_rat = Rat.reproduce(male, female, (PREDATION, TEMPERATURE, FOOD_AVAILABILITY))
+            for gene in new_rat.phenotype:
+                RAT_STATS[gene] += 1
+            RATS.add(new_rat)
+            addMessage("A rat is born")
+
 
 def killRats():
     global RATS, RAT_STATS
@@ -104,6 +106,7 @@ def killRats():
             for gene in rat.phenotype:
                 RAT_STATS[gene] -= 1
             addMessage('A rat is murdered')
+            print("Rat lived for:", rat.time_alive)
 
 
 def displayRatStats(screen):
@@ -202,6 +205,7 @@ def checkParamChange(event, button, index):
         if index == 5:
             if FOOD_AVAILABILITY > 1:
                 FOOD_AVAILABILITY -= 1
+
 
 def addMessage(message):
     global MESSAGES

@@ -1,5 +1,6 @@
 import numpy as np
 import pygame
+import math
 
 NUM_TRAITS = 3
 
@@ -9,7 +10,6 @@ calculate lifespan,
 number of offspring,
 give rats id
 vertical movement
-you have to call .kill() on the rats' sprites in addition to removing them from rats
 fullscreen mode
 mutations
 '''
@@ -21,7 +21,7 @@ class Rat(pygame.sprite.Sprite):
     # phenotype will be an array, each index representing the expressed gene
     # the order of genes will always be D/d: dark, A/a: agile, R/r: rotund
     ###
-    def __init__(self, genotype, ):
+    def __init__(self, genotype, params):
         super(Rat, self).__init__()
         self.genotype = genotype
         self.phenotype = self.expressPhenotype()
@@ -36,12 +36,12 @@ class Rat(pygame.sprite.Sprite):
         self.num_offspring = 0
         self.time_alive = 0
         self.reproduction_ready = False
-        self.lifespan = 14
+        self.lifespan = self.calculateLifespan(params)
         self.isalive = True
 
 
     @staticmethod
-    def reproduce(male, female):
+    def reproduce(male, female, params):
         global NUM_TRAITS
         child_genotype = []
         for i in range(NUM_TRAITS):
@@ -53,7 +53,7 @@ class Rat(pygame.sprite.Sprite):
         female.num_offspring += 1
         male.reproduction_ready = False
         female.reproduction_ready = False
-        return Rat(child_genotype)
+        return Rat(child_genotype, params)
 
 
 
@@ -71,6 +71,33 @@ class Rat(pygame.sprite.Sprite):
         return phenotype
 
 
+    def calculateLifespan(self, params):
+        pvector = list(params)
+        pvector[1] /= 5
+        pvector[1] -= 6
+        dval, aval, rval = 0, 0, 0
+        if self.phenotype[0] == 'D':
+            dval = 1
+        else:
+            dval = -1
+        if self. phenotype[1] == 'A':
+            aval = 1
+        else:
+            aval = -1
+        if self.phenotype[2] == 'R':
+            rval = 1
+        else:
+            rval = -1
+        M = np.array([[dval, 0, 0],
+                      [aval, 0, aval],
+                      [0, -1*rval, 0]])
+        score_vector = M @ pvector
+        mean = score_vector.mean()
+        return (mean / 2) + 8
+
+
+
+    # this difference is not noticeable
     def determineSize(self):
         if self.phenotype[2] == 'R':
             return 25
@@ -111,9 +138,9 @@ class Rat(pygame.sprite.Sprite):
     # this represents either the time spent moving or the time spent until moving depending of if still or not
     def setRandomTime(self):
         if self.direction == 0:
-            return np.random.gamma(10, 20) * 10000
+            return np.random.gamma(5, 20) * 100
         else:
-            return np.random.gamma(10, 20) * 1000
+            return np.random.gamma(5, 20) * 100
 
 
 
@@ -129,10 +156,11 @@ class Rat(pygame.sprite.Sprite):
             self.setRandomTime()
         self.rect[0] += self.speed * self.direction
 
-        if self.num_offspring < self.max_offspring and self.time_alive >= (self.num_offspring + 1) * 6000:
+        if self.num_offspring < self.max_offspring and self.time_alive >= (self.num_offspring + 2) * 2000:
             self.reproduction_ready = True
 
         if self.time_alive >= self.lifespan * 1000:
+            self.reproduction_ready = False
             self.isalive = False
 
 
