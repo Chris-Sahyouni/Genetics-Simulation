@@ -4,7 +4,7 @@ import math
 
 NUM_TRAITS = 3
 REPRODUCTION_RATE = 3
-
+MAX_LIFESPAN = 10
 
 # TODO:
 '''
@@ -24,6 +24,7 @@ class Rat(pygame.sprite.Sprite):
     # the order of genes will always be D/d: dark, A/a: agile, R/r: rotund
     ###
     def __init__(self, genotype, params):
+        global MAX_LIFESPAN
         super(Rat, self).__init__()
         self.genotype = genotype
         self.phenotype = self.expressPhenotype()
@@ -39,7 +40,7 @@ class Rat(pygame.sprite.Sprite):
         self.time_alive = 0
         self.reproduction_ready = False
         self.score = self.calculateScore(params)
-        self.lifespan = self.lifespan()
+        self.lifespan = (self.score * MAX_LIFESPAN) + 4
         self.isalive = True
 
 
@@ -74,50 +75,99 @@ class Rat(pygame.sprite.Sprite):
         return phenotype
 
 
-    def lifespan(self):
-        lifespan = (self.score / 3) + 10
-        mortality_rate = 1 - ((self.score / 32) + .5)
-        mortality_rate /= 2
-        mortality_rate += .1
-        sterile = np.random.choice((True, False), p=[mortality_rate, 1 - mortality_rate])
-        # print('Rat mortality rate:', mortality_rate * 100)
-        if sterile:
-            lifespan = 3
-        # print('Rat will live for:', lifespan)
-        return lifespan
-
-
-
     def calculateScore(self, params):
-        pvector = list(params)
-        pvector[1] /= 5
-        pvector[1] -= 6
-        dval, aval, rval = 0, 0, 0
-        if self.phenotype[0] == 'D':
-            dval = 1
-        else:
-            dval = -1
-        if self. phenotype[1] == 'A':
-            aval = 1
-        else:
-            aval = -1
-        if self.phenotype[2] == 'R':
-            rval = 1
-        else:
-            rval = -1
-        M = np.array([[dval, 0, 0],
-                      [aval, 0, aval],
-                      [0, -1*rval, 0]])
-        score_vector = M @ pvector
-        # print(score_vector)
-        return score_vector.mean()
+        p = params[0]
+        t = params[1] // 5 - 6
+        fs = params[2]
+        # note that these each start with a None value so that the indices line up the with the levels of the environmental parameters
+        temp_table = {
+            'R': [None, 0.6, 0.7, 0.8, 0.9, 0.95, 1, 1, 0.9, 0.7, 0.5, 0.35, 0.2],
+            'r': [None, 0.2, 0.35, 0.5, 0.7, 0.9, 1, 1, 0.95, 0.9, 0.8, 0.7, 0.6],
+            'M': [None, 0.8, 0.9, 0.9, 0.9, 1, 1, 1, 1, 0.9, 0.9, 0.8, 0.8]
+        }
+        fs_table = {
+            'A': [None, 0.4, 0.45, 0.55, 0.65, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 1, 1],
+            'a': [None, 0.1, 0.15, 0.2, 0.3, 0.4, 0.45, 0.55, 0.6, 0.75, 0.9, 0.95, 1],
+            'p': [None, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.3, 0.3, 0.3, 0.4, 0.4, 0.4],
+            's': [None, 0.7, 0.8, 0.8, 0.8, 0.9, 0.9, 0.9, 0.9, 1, 1, 1, 1]
+        }
+        pred_on_speed = {
+            'A': [None, 0.4, 0.45, 0.55, 0.65, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 1, 1],
+            'a': [None, 0.1, 0.15, 0.2, 0.3, 0.4, 0.45, 0.55, 0.6, 0.75, 0.9, 0.95, 1],
+            'p': [None, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.3, 0.3, 0.3, 0.4, 0.4, 0.4],
+            's': [None, 0.7, 0.8, 0.8, 0.8, 0.9, 0.9, 0.9, 0.9, 1, 1, 1, 1]
+        }
+        pred_on_color = {
+            'D': [None, 0.4, 0.45, 0.55, 0.65, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 1, 1],
+            'd': [None, 0.1, 0.15, 0.2, 0.3, 0.4, 0.45, 0.55, 0.6, 0.75, 0.9, 0.95, 1],
+            'w': [None, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.3, 0.3, 0.3, 0.4, 0.4, 0.4]
+        }
+        score = 0
+        color = self.phenotype[0]
+        agility = self.phenotype[1]
+        rotundity = self.phenotype[2]
+        score += temp_table[rotundity][t]
+        score += fs_table[agility][fs]
+        score += pred_on_speed[agility][p]
+        score += pred_on_color[color][p]
+        score /= 4
+        return score
+
+
+
+    def mortality(self):
+        global MAX_LIFESPAN
+        prob = (self.lifespan - 4) / MAX_LIFESPAN
+        prob /= 2.5
+        self.lifespan = np.random.choice([self.lifespan, 3], p=[1-prob, prob])
+
+
+
+
+    # def lifespan(self):
+    #     lifespan = (self.score / 3) + 10
+    #     mortality_rate = 1 - ((self.score / 32) + .5)
+    #     mortality_rate /= 2.5
+    #     mortality_rate += .05
+    #     sterile = np.random.choice((True, False), p=[mortality_rate, 1 - mortality_rate])
+    #     # print('Rat mortality rate:', mortality_rate * 100)
+    #     if sterile:
+    #         lifespan = 3
+    #     # print('Rat will live for:', lifespan)
+    #     return lifespan
+
+
+
+    # def calculateScore(self, params):
+    #     pvector = list(params)
+    #     pvector[1] /= 5
+    #     pvector[1] -= 6
+    #     dval, aval, rval = 0, 0, 0
+    #     if self.phenotype[0] == 'D':
+    #         dval = 1
+    #     else:
+    #         dval = -1
+    #     if self. phenotype[1] == 'A':
+    #         aval = 1
+    #     else:
+    #         aval = -1
+    #     if self.phenotype[2] == 'R':
+    #         rval = 1
+    #     else:
+    #         rval = -1
+    #     M = np.array([[dval, 0, 0],
+    #                   [aval, 0, aval],
+    #                   [0, -1*rval, 0]])
+    #     score_vector = M @ pvector
+    #     # print(score_vector)
+    #     return score_vector.mean()
 
 
 
     def determineSize(self):
         if self.phenotype[2] == 'R':
             return 50
-        return 30
+        return 50
 
 
     def selectImage(self):
@@ -126,8 +176,10 @@ class Rat(pygame.sprite.Sprite):
             img = pygame.image.load('images/dark_rat.png')
         else:
             img = pygame.image.load('images/light_rat.png')
-        return pygame.transform.scale(img, (self.size, self.size))
-
+        if self.phenotype[2] == 'R':
+            return pygame.transform.scale(img, (self.size, self.size))
+        else:
+            return pygame.transform.scale(img, (self.size / 2, self.size))
 
 
     def randomStartPos(self):
@@ -186,5 +238,6 @@ class Rat(pygame.sprite.Sprite):
 
     def draw(self, screen):
         screen.blit(self.surf, self.rect.topleft)
+
 
 

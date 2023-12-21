@@ -7,7 +7,7 @@ from rat import Rat
 
 PREDATION = 6
 TEMPERATURE = 65
-FOOD_AVAILABILITY = 6
+FOOD_SCARCITY = 6
 RATS = pygame.sprite.Group()
 REPRODUCE_QUEUE = []
 RAT_STATS = {
@@ -27,16 +27,16 @@ MESSAGES = []
 
 
 def gameLoop():
-    global PREDATION, TEMPERATURE, FOOD_AVAILABILITY, RATS
+    global PREDATION, TEMPERATURE, FOOD_SCARCITY, RATS
     pygame.init()
     print('-------------- New Game ----------------')
     screen = pygame.display.set_mode((1280, 720))
-    env_params = (PREDATION, TEMPERATURE, FOOD_AVAILABILITY)
+    env_params = (PREDATION, TEMPERATURE, FOOD_SCARCITY)
     RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], env_params))
     RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], env_params))
     # make sure first 2 rats dont die instantly
     for rat in RATS:
-        rat.lifespan = np.random.randint(9, 16)
+        rat.lifespan = np.random.randint(11, 16)
     clock = pygame.time.Clock()
     bg = pygame.image.load('images/forest_bg.jpg')
     running = True
@@ -100,7 +100,7 @@ def gameLoop():
 
 
 def newGeneration():
-    global RATS, REPRODUCE_QUEUE, RAT_STATS, PREDATION, TEMPERATURE, FOOD_AVAILABILITY
+    global RATS, REPRODUCE_QUEUE, RAT_STATS, PREDATION, TEMPERATURE, FOOD_SCARCITY
     for rat in RATS:
         if rat.reproduction_ready and rat.isalive:
             REPRODUCE_QUEUE.append(rat)
@@ -109,7 +109,7 @@ def newGeneration():
         REPRODUCE_QUEUE.remove(male)
         female = np.random.choice(REPRODUCE_QUEUE)
         REPRODUCE_QUEUE.remove(female)
-        new_rat = Rat.reproduce(male, female, (PREDATION, TEMPERATURE, FOOD_AVAILABILITY))
+        new_rat = Rat.reproduce(male, female, (PREDATION, TEMPERATURE, FOOD_SCARCITY))
         for gene in new_rat.phenotype:
             RAT_STATS[gene] += 1
         RATS.add(new_rat)
@@ -161,7 +161,7 @@ def displayMessages(screen):
 
 
 def displaySelectivePressures(screen):
-    global PREDATION, TEMPERATURE, FOOD_AVAILABILITY
+    global PREDATION, TEMPERATURE, FOOD_SCARCITY
     font = pygame.font.Font('fonts/autumn.ttf', 22)
     color = pygame.Color('black')
     screen.blits([
@@ -172,7 +172,7 @@ def displaySelectivePressures(screen):
     screen.blits([
         (font.render(str(PREDATION), True, color), (145, 20)),
         (font.render(str(TEMPERATURE), True, color), (165, 50)),
-        (font.render(str(FOOD_AVAILABILITY), True, color), (205, 80))
+        (font.render(str(FOOD_SCARCITY), True, color), (205, 80))
     ])
 
 
@@ -197,7 +197,7 @@ def plusMinusButtons(screen, location):
 
 
 def checkParamChange(event, button, index):
-    global PREDATION, TEMPERATURE, FOOD_AVAILABILITY
+    global PREDATION, TEMPERATURE, FOOD_SCARCITY
     if button.collidepoint(event.pos):
         if index == 0:
             if PREDATION < 12:
@@ -216,12 +216,12 @@ def checkParamChange(event, button, index):
                 TEMPERATURE -= 5
             return
         if index == 4:
-            if FOOD_AVAILABILITY < 12:
-                FOOD_AVAILABILITY += 1
+            if FOOD_SCARCITY < 12:
+                FOOD_SCARCITY += 1
             return
         if index == 5:
-            if FOOD_AVAILABILITY > 1:
-                FOOD_AVAILABILITY -= 1
+            if FOOD_SCARCITY > 1:
+                FOOD_SCARCITY -= 1
 
 
 def addMessage(message):
