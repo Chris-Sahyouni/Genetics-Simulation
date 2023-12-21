@@ -32,7 +32,7 @@ class Rat(pygame.sprite.Sprite):
         self.image = self.selectImage()
         self.surf = self.image
         self.rect = self.randomStartPos()
-        self.direction = np.random.choice([-1, 1])
+        self.direction = 0
         self.time_till = self.setRandomTime()
         self.speed = self.setSpeed()
         self.max_offspring = 6
@@ -210,9 +210,9 @@ class Rat(pygame.sprite.Sprite):
 
 
     def setDirection(self):
-        if self.rect[1] < 235 + self.size:
+        if self.rect[0] < 300 + self.size:
             self.direction = 1
-        elif self.rect[1] > 1220 - self.size:
+        elif self.rect[0] > 1150 - self.size:
             self.direction = -1
         else:
             self.direction = np.random.choice([-1, 1])
@@ -228,30 +228,33 @@ class Rat(pygame.sprite.Sprite):
         else:
             return 1
 
-    # this represents either the time spent moving or the time spent until moving depending of if still or not
-    def setRandomTime(self):
-        if self.direction == 0:
-            return np.random.gamma(5, 20) * 100
-        else:
-            return np.random.gamma(5, 20) * 100
 
+    def setRandomTime(self):
+        return ((np.random.rand() * 3) + .5) * 1000
 
 
     def update(self, time_elapsed):
         pygame.sprite.Sprite.update(self, time_elapsed)
         self.time_till -= time_elapsed
         self.time_alive += time_elapsed
-        if self.time_till <= 0 or self.rect[0] < 235 + self.size or self.rect[0] > 1200 - self.size:
+        if self.time_till <= 0:
             if self.direction == 0:
                 self.setDirection()
             else:
                 self.direction = 0
-            self.setRandomTime()
+            self.time_till = self.setRandomTime()
+
+        if self.rect[0] < 250:
+            self.direction = 0
+            self.time_till = self.setRandomTime()
+
+        if self.rect[0] > 1200:
+            self.direction = 0
+            self.time_till = self.setRandomTime()
+
         self.rect[0] += self.speed * self.direction
 
-
         if self.time_alive >= self.lifespan * 1000:
-            # rat dies
             self.reproduction_ready = False
             self.isalive = False
 
