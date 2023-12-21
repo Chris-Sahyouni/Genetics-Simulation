@@ -8,19 +8,20 @@ from rat import Rat
 PREDATION = 6
 TEMPERATURE = 65
 FOOD_SCARCITY = 6
+ENVIRONMENTAL_HEALTH = 5
 RATS = pygame.sprite.Group()
 REPRODUCE_QUEUE = []
 RAT_STATS = {
-    'A': 2,
+    'A': 4,
     'a': 0,
-    'R': 2,
+    'R': 4,
     'r': 0,
-    'D': 2,
+    'D': 4,
     'd': 0,
-    # 'Metabolic': 0,
-    # 'Paralyzed': 0,
-    # 'Sprint': 0,
-    # 'Albino': 0
+    'M': 0,
+    'p': 0,
+    's': 0,
+    'w': 0
 }
 
 MESSAGES = []
@@ -32,11 +33,11 @@ def gameLoop():
     print('-------------- New Game ----------------')
     screen = pygame.display.set_mode((1280, 720))
     env_params = (PREDATION, TEMPERATURE, FOOD_SCARCITY)
-    RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], env_params))
-    RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], env_params))
-    # make sure first 2 rats dont die instantly
+    for i in range(4):
+        RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], env_params))
+    # make sure initial rats dont die instantly
     for rat in RATS:
-        rat.lifespan = np.random.randint(11, 16)
+        rat.lifespan = np.random.randint(8, 14)
     clock = pygame.time.Clock()
     bg = pygame.image.load('images/forest_bg.jpg')
     running = True
@@ -100,7 +101,7 @@ def gameLoop():
 
 
 def newGeneration():
-    global RATS, REPRODUCE_QUEUE, RAT_STATS, PREDATION, TEMPERATURE, FOOD_SCARCITY
+    global RATS, REPRODUCE_QUEUE, RAT_STATS, PREDATION, TEMPERATURE, FOOD_SCARCITY, ENVIRONMENTAL_HEALTH
     for rat in RATS:
         if rat.reproduction_ready and rat.isalive:
             REPRODUCE_QUEUE.append(rat)
@@ -109,7 +110,7 @@ def newGeneration():
         REPRODUCE_QUEUE.remove(male)
         female = np.random.choice(REPRODUCE_QUEUE)
         REPRODUCE_QUEUE.remove(female)
-        new_rat = Rat.reproduce(male, female, (PREDATION, TEMPERATURE, FOOD_SCARCITY))
+        new_rat = Rat.reproduce(male, female, (PREDATION, TEMPERATURE, FOOD_SCARCITY), ENVIRONMENTAL_HEALTH)
         for gene in new_rat.phenotype:
             RAT_STATS[gene] += 1
         RATS.add(new_rat)
@@ -134,19 +135,23 @@ def displayRatStats(screen):
         'R': 'Rotund',
         'r': 'Skinny',
         'D': 'Dark',
-        'd': 'Light'
+        'd': 'Light',
+        'M': 'Metabolic',
+        'p': 'Paralyzed',
+        's': 'Sprint',
+        'w': 'Albino'
     }
     y = 150
     n = len(RATS) or 1
     color = pygame.Color('black')
     font = pygame.font.Font('fonts/autumn.ttf', 16)
-    screen.blit(font.render('#', True, color), (80, 130))
-    screen.blit(font.render('%', True, color), (110, 130))
+    screen.blit(font.render('#', True, color), (95, 130))
+    screen.blit(font.render('%', True, color), (125, 130))
     for gene in RAT_STATS:
         screen.blit(font.render(geneToWord[gene], True, color), (15, y))
-        screen.blit(font.render(str(RAT_STATS[gene]), True, color), (80, y))
+        screen.blit(font.render(str(RAT_STATS[gene]), True, color), (95, y))
         percent = "{:.1f}".format((RAT_STATS[gene] / n) * 100)
-        screen.blit(font.render(percent, True, color), (110, y))
+        screen.blit(font.render(percent, True, color), (125, y))
         y += 30
 
 

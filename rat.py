@@ -40,18 +40,27 @@ class Rat(pygame.sprite.Sprite):
         self.time_alive = 0
         self.reproduction_ready = False
         self.score = self.calculateScore(params)
-        self.lifespan = (self.score * MAX_LIFESPAN) + 4
+        self.lifespan = self.calculateLifespan()
         self.isalive = True
 
 
     @staticmethod
-    def reproduce(male, female, params):
+    def reproduce(male, female, params, env_health):
         global NUM_TRAITS
         child_genotype = []
+        mutations = [['M'], ['p', 's'], ['w']]
+        mutation_probs = [None, .0042, .0031, .0025, .0021, .0018]
+        mut_prob = mutation_probs[env_health]
         for i in range(NUM_TRAITS):
             child_gene = ['', '']
             child_gene[0] = male.genotype[i][np.random.randint(0, 2)]
             child_gene[1] = female.genotype[i][np.random.randint(0, 2)]
+
+            for j in range(2):
+                mutate = np.random.choice([True, False], p=[mut_prob, 1-mut_prob])
+                if mutate:
+                    child_gene[j] = np.random.choice(mutations[i])
+
             child_genotype.append(child_gene)
         male.num_offspring += 1
         female.num_offspring += 1
@@ -115,11 +124,12 @@ class Rat(pygame.sprite.Sprite):
 
 
 
-    def mortality(self):
+    def calculateLifespan(self):
         global MAX_LIFESPAN
-        prob = (self.lifespan - 4) / MAX_LIFESPAN
-        prob /= 2.5
-        self.lifespan = np.random.choice([self.lifespan, 3], p=[1-prob, prob])
+        lifespan = (self.score * MAX_LIFESPAN) + 4
+        prob = self.score / 2.5
+        lifespan = np.random.choice([lifespan, 3], p=[1-prob, prob])
+        return lifespan
 
 
 
@@ -171,12 +181,23 @@ class Rat(pygame.sprite.Sprite):
 
 
     def selectImage(self):
+        img = None
         if self.phenotype[0] == 'D':
-            img = None
-            img = pygame.image.load('images/dark_rat.png')
+            if self.phenotype[2] == 'M':
+                img = pygame.load('images/dark_metabolic.png')
+            else:
+                img = pygame.image.load('images/dark_rat.png')
+        elif self.phenotype[0] == 'd':
+            if self.phenotype[2] == 'M':
+                img = pygame.image.load('images/light_metabolic.png')
+            else:
+                img = pygame.image.load('images/light_rat.png')
         else:
-            img = pygame.image.load('images/light_rat.png')
-        if self.phenotype[2] == 'R':
+            if self.phenotype[2] == 'M':
+                img = pygame.load('images/albino_metabolic.png')
+            else:
+                img = pygame.load('images/albinor_rat.png')
+        if self.phenotype[2] == 'R' or self.phenotype[2] == 'M':
             return pygame.transform.scale(img, (self.size, self.size))
         else:
             return pygame.transform.scale(img, (self.size / 2, self.size))
@@ -198,7 +219,11 @@ class Rat(pygame.sprite.Sprite):
 
 
     def setSpeed(self):
-        if self.phenotype[1] == 'A':
+        if self.phenotype[1] == 's':
+            return 10
+        elif self.phenotype[1] == 'p':
+            return 0
+        elif self.phenotype[1] == 'A':
             return 3
         else:
             return 1
