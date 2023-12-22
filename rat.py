@@ -5,6 +5,7 @@ import math
 NUM_TRAITS = 3
 REPRODUCTION_RATE = 3
 MAX_LIFESPAN = 10
+MAX_OFFSPRING = 6
 
 # TODO:
 '''
@@ -28,19 +29,20 @@ class Rat(pygame.sprite.Sprite):
         super(Rat, self).__init__()
         self.genotype = genotype
         self.phenotype = self.expressPhenotype()
-        self.size = self.determineSize()
+        self._size = self.determineSize()
         self.image = self.selectImage()
         self.surf = self.image
         self.rect = self.randomStartPos()
-        self.direction = 0
-        self.time_till = self.setRandomTime()
-        self.speed = self.setSpeed()
-        self.max_offspring = 6
-        self.num_offspring = 0
-        self.time_alive = 0
+        self._direction = 0
+        self._time_till_move = self.setRandomTime()
+        self._time_till_angle = self.setRandomTime()
+        self._angle = 1
+        self._speed = self.setSpeed()
+        self._num_offspring = 0
+        self._time_alive = 0
         self.reproduction_ready = False
-        self.score = self.calculateScore(params)
-        self.lifespan = self.calculateLifespan()
+        self._score = self.calculateScore(params)
+        self._lifespan = self.calculateLifespan()
         self.isalive = True
 
 
@@ -62,8 +64,8 @@ class Rat(pygame.sprite.Sprite):
                     child_gene[j] = np.random.choice(mutations[i])
 
             child_genotype.append(child_gene)
-        male.num_offspring += 1
-        female.num_offspring += 1
+        male._num_offspring += 1
+        female._num_offspring += 1
         male.reproduction_ready = False
         female.reproduction_ready = False
         return Rat(child_genotype, params)
@@ -126,8 +128,8 @@ class Rat(pygame.sprite.Sprite):
 
     def calculateLifespan(self):
         global MAX_LIFESPAN
-        lifespan = (self.score * MAX_LIFESPAN) + 4
-        prob = self.score / 2.5
+        lifespan = (self._score * MAX_LIFESPAN) + 4
+        prob = self._score / 2.5
         lifespan = np.random.choice([lifespan, 3], p=[1-prob, prob])
         return lifespan
 
@@ -198,9 +200,9 @@ class Rat(pygame.sprite.Sprite):
             else:
                 img = pygame.load('images/albinor_rat.png')
         if self.phenotype[2] == 'R' or self.phenotype[2] == 'M':
-            return pygame.transform.scale(img, (self.size, self.size))
+            return pygame.transform.scale(img, (self._size, self._size))
         else:
-            return pygame.transform.scale(img, (self.size / 2, self.size))
+            return pygame.transform.scale(img, (self._size / 2, self._size))
 
 
     def randomStartPos(self):
@@ -210,12 +212,12 @@ class Rat(pygame.sprite.Sprite):
 
 
     def setDirection(self):
-        if self.rect[0] < 300 + self.size:
-            self.direction = 1
-        elif self.rect[0] > 1150 - self.size:
-            self.direction = -1
+        if self.rect[0] < 300 + self._size:
+            self._direction = 1
+        elif self.rect[0] > 1150 - self._size:
+            self._direction = -1
         else:
-            self.direction = np.random.choice([-1, 1])
+            self._direction = np.random.choice([-1, 1])
 
 
     def setSpeed(self):
@@ -233,35 +235,58 @@ class Rat(pygame.sprite.Sprite):
         return ((np.random.rand() * 3) + .5) * 1000
 
 
-    def update(self, time_elapsed):
+    def _updateMovement(self, time_elapsed):
         pygame.sprite.Sprite.update(self, time_elapsed)
-        self.time_till -= time_elapsed
-        self.time_alive += time_elapsed
-        if self.time_till <= 0:
-            if self.direction == 0:
+        self._time_till_move -= time_elapsed
+        if self._time_till_move <= 0:
+            if self._direction == 0:
                 self.setDirection()
             else:
-                self.direction = 0
-            self.time_till = self.setRandomTime()
+                self._direction = 0
+            self._time_till_move = self.setRandomTime()
 
         if self.rect[0] < 250:
-            self.direction = 0
-            self.time_till = self.setRandomTime()
+            self._direction = 0
+            self._time_till_move = self.setRandomTime()
 
         if self.rect[0] > 1200:
-            self.direction = 0
-            self.time_till = self.setRandomTime()
+            self._direction = 0
+            self._time_till_move = self.setRandomTime()
 
-        self.rect[0] += self.speed * self.direction
+        self.rect[0] += self._speed * self._direction
 
-        if self.time_alive >= self.lifespan * 1000:
+
+    def _updateAngle(self, time_elapsed):
+        self._time_till_angle -= time_elapsed
+        if self._time_till_angle <= 0:
+            self._rotateImage()
+            self._time_till_angle = self.setRandomTime()
+
+
+    def update(self, time_elapsed):
+        global MAX_OFFSPRING
+        self._time_alive += time_elapsed
+        self._updateMovement(time_elapsed)
+        self._updateAngle(time_elapsed)
+
+        if self._time_alive >= self._lifespan * 1000:
             self.reproduction_ready = False
             self.isalive = False
 
-        elif self.num_offspring < self.max_offspring and self.time_alive >= 4000:
-            time_mature = self.time_alive - 4000
-            if time_mature >= self.num_offspring * REPRODUCTION_RATE * 1000:
+        elif self._num_offspring < MAX_OFFSPRING and self._time_alive >= 4000:
+            time_mature = self._time_alive - 4000
+            if time_mature >= self._num_offspring * REPRODUCTION_RATE * 1000:
                 self.reproduction_ready = True
+
+
+
+    def _rotateImage(self):
+        new_img = pygame.transform.rotate(self.image, -self._angle * 45)
+        buffered_rect = self.rect
+        self.image = new_img
+        self.rect = buffered_rect
+        self.rect[1] -= 10
+        self._angle = -self._angle
 
 
     def draw(self, screen):
