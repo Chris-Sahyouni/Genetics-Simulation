@@ -1,6 +1,7 @@
 import pygame
 import numpy as np
 from rat import Rat
+from predator import Predator
 
 # this can be used to pass all areas in need of updating to update() at once for efficiency
 # UPDATE_REGIONS = []
@@ -10,6 +11,7 @@ TEMPERATURE = 65
 FOOD_SCARCITY = 1
 ENVIRONMENTAL_HEALTH = 5
 RATS = pygame.sprite.Group()
+PREDATORS = pygame.sprite.Group()
 REPRODUCE_QUEUE = []
 FOOD = []
 STARTING_RATS = 6
@@ -46,13 +48,17 @@ FOOD_IMG = pygame.transform.scale(img, (12, 12))
 
 
 def gameLoop():
-    global PREDATION, TEMPERATURE, FOOD_SCARCITY, RATS
+    global PREDATION, TEMPERATURE, FOOD_SCARCITY, RATS, PREDATORS
     pygame.init()
     print('-------------- New Game ----------------')
     screen = pygame.display.set_mode((1280, 720))
     env_params = (PREDATION, TEMPERATURE, FOOD_SCARCITY)
+
     for i in range(STARTING_RATS):
         RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], env_params))
+
+    PREDATORS.add(Predator())
+
     # make sure initial rats dont die instantly
     for rat in RATS:
         rat.lifespan = np.random.randint(10, 15)
@@ -94,6 +100,9 @@ def gameLoop():
         side_panel = pygame.Rect(0, 0, 235, 720)
         screen.fill(pygame.Color('gray50'), side_panel)
 
+        screen.fill(pygame.Color('black'), (15, 120, 200, 1))
+        screen.fill(pygame.Color('black'), (15, 455, 200, 1))
+
         displaySelectivePressures(screen)
         pred_buttons = plusMinusButtons(screen, (118, 26))
         pred_plus = pred_buttons[0]
@@ -111,8 +120,12 @@ def gameLoop():
         displayEnvHealth(screen)
         displayFood(screen)
 
-        RATS.draw(screen)
         RATS.update(clock.get_time())
+        RATS.draw(screen)
+
+        PREDATORS.update(clock.get_time())
+        PREDATORS.draw(screen)
+
         newGeneration()
         killRats()
 
@@ -207,7 +220,7 @@ def displayEnvHealth(screen):
 
 def displayMessages(screen):
     global MESSAGES
-    y = 450
+    y = 465
     font = pygame.font.Font('fonts/autumn.ttf', 14)
     color = pygame.Color('white')
     for message in MESSAGES:
@@ -257,15 +270,17 @@ def plusMinusButtons(screen, location):
 
 
 def checkParamChange(event, button, index):
-    global PREDATION, TEMPERATURE, FOOD_SCARCITY, FOOD
+    global PREDATION, TEMPERATURE, FOOD_SCARCITY, FOOD, PREDATORS
     if button.collidepoint(event.pos):
         if index == 0:
             if PREDATION < 12:
                 PREDATION += 1
+                PREDATORS.add(Predator())
             return
         if index == 1:
             if PREDATION > 1:
                 PREDATION -= 1
+                PREDATORS.pop()
             return
         if index == 2:
             if TEMPERATURE < 90:

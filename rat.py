@@ -13,7 +13,9 @@ MAX_OFFSPRING = 2
  - add a reset game button
  - add random events
  - outline the pause button
+ - make a box for environmental health and mutation rate
  - events are randomly drawn every five seconds
+ - fix problem where rats rotating moves it down
 '''
 
 
@@ -217,10 +219,12 @@ class Rat(pygame.sprite.Sprite):
 
         if self.rect[0] < 250:
             self._direction = 0
+            self.rect[0] += 1
             self._time_till_move = self.setRandomTime()
 
         if self.rect[0] > 1150:
             self._direction = 0
+            self.rect[0] -= 1
             self._time_till_move = self.setRandomTime()
 
         self.rect[0] += self._speed * self._direction
