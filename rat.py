@@ -9,7 +9,6 @@ MAX_OFFSPRING = 2
 # TODO:
 '''
  - the metabolic rats chefs hats are invisible
- - add hawks and berries
  - add a reset game button
  - add random events
  - outline the pause button

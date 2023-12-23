@@ -174,6 +174,8 @@ def killRats():
             RATS.remove(rat)
             for gene in rat.phenotype:
                 RAT_STATS[gene] -= 1
+        if len(RATS) == 0:
+            addMessage('The Rat population has gone extinct')
 
 
 def addFood():
