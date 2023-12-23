@@ -4,7 +4,7 @@ import pygame
 NUM_TRAITS = 3
 REPRODUCTION_RATE = 3
 MAX_LIFESPAN = 10
-MAX_OFFSPRING = 2
+MAX_OFFSPRING = 6
 
 # TODO:
 '''
@@ -15,6 +15,8 @@ MAX_OFFSPRING = 2
  - make a box for environmental health and mutation rate
  - events are randomly drawn every five seconds
  - fix problem where rats rotating moves it down
+ - there should probably not be any random events for the first 15 seconds or so
+ - the hunters event will increase the number of predator sprites unintentionally
 '''
 
 
@@ -140,7 +142,7 @@ class Rat(pygame.sprite.Sprite):
     def calculateLifespan(self):
         global MAX_LIFESPAN
         lifespan = (self._score * MAX_LIFESPAN) + 4
-        prob = self._score / 3
+        prob = self._score / 3.5
         lifespan = np.random.choice([lifespan, 3], p=[1 - prob, prob])
         return lifespan
 

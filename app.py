@@ -2,9 +2,23 @@ import pygame
 import numpy as np
 from rat import Rat
 from predator import Predator
+from enum import IntEnum
 
 # this can be used to pass all areas in need of updating to update() at once for efficiency
 # UPDATE_REGIONS = []
+
+class RandEvent(IntEnum):
+    NO_EVENT = 0
+    VOLCANO = 1
+    DISEASE = 2
+    HUNTERS = 3
+    GARBAGE = 4
+    RADIATION = 5
+    AIR_QUALITY = 6
+    GREEN_BILL = 7
+    ELECTRIC_CAR = 8
+    OZONE = 9
+
 
 PREDATION = 1
 TEMPERATURE = 65
@@ -43,6 +57,8 @@ GENE_TO_WORD = {
 
 MESSAGES = []
 
+TIME_TILL_EVENT = 0
+
 img = pygame.image.load('images/food.png')
 FOOD_IMG = pygame.transform.scale(img, (12, 12))
 
@@ -51,7 +67,9 @@ def gameLoop():
     global PREDATION, TEMPERATURE, FOOD_SCARCITY, RATS, PREDATORS
     pygame.init()
     print('-------------- New Game ----------------')
+
     screen = pygame.display.set_mode((1280, 720))
+
     env_params = (PREDATION, TEMPERATURE, FOOD_SCARCITY)
 
     for i in range(STARTING_RATS):
@@ -62,7 +80,9 @@ def gameLoop():
     # make sure initial rats dont die instantly
     for rat in RATS:
         rat.lifespan = np.random.randint(10, 15)
+
     clock = pygame.time.Clock()
+
     bg = pygame.image.load('images/forest_bg.jpg')
 
     for i in range(13 - FOOD_SCARCITY):
@@ -70,6 +90,7 @@ def gameLoop():
 
     running = True
     paused = False
+    rand_event = RandEvent(0)
 
     while running:
         for event in pygame.event.get():
@@ -82,9 +103,12 @@ def gameLoop():
                 paused = True
 
         while paused:
-            screen.fill(pygame.Color('white'), (1220, 70, 12, 100))
-            screen.fill(pygame.Color('white'), (1240, 70, 12, 100))
-            pygame.display.update((1150, 100, 100, 40))
+            clock = None
+            screen.fill(pygame.Color('white'), (1220, 70, 12, 50))
+            screen.fill(pygame.Color('white'), (1240, 70, 12, 50))
+            if rand_event != RandEvent.NO_EVENT:
+                displayRandomEvent(screen, rand_event)
+            pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -93,6 +117,7 @@ def gameLoop():
                     for i, button in enumerate(buttons):
                         checkParamChange(event, button, i)
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    clock = pygame.time.Clock()
                     paused = False
 
 
@@ -129,6 +154,10 @@ def gameLoop():
         newGeneration()
         killRats()
 
+        rand_event = generateRandomEvent(clock.get_time())
+        if rand_event != 0:
+            paused = True
+
         clock.tick(60)
         pygame.display.update()
 
@@ -136,6 +165,55 @@ def gameLoop():
 
 
 # ---------------------------------------------------------------------------- #
+
+
+def generateRandomEvent(time_elapsed):
+    global TIME_TILL_EVENT
+    TIME_TILL_EVENT += time_elapsed
+    if TIME_TILL_EVENT >= 5000:
+        TIME_TILL_EVENT = 0
+        re = np.random.choice(list(range(10)), p=[.94, .01, .01, .01, .005, .005, .005, .005, .005, .005])
+        return RandEvent(re)
+    return 0
+
+
+def displayRandomEvent(screen, rand_event):
+    text = ""
+    img = pygame.surface.Surface((0,0))
+    if rand_event == RandEvent.VOLCANO:
+        text = f'A nearby volcano has erupted killing 90% of the rat population!'
+        img = pygame.image.load('images/volcano.png')
+    elif rand_event == RandEvent.DISEASE:
+        text = f'An infectious disease called the Modelovirus has killed 60% of the rat population!'
+        img = pygame.image.load('images/virus.png')
+    elif rand_event == RandEvent.HUNTERS:
+        # problematic, what if predation is already at or close to max
+        text = 'Hunters have begun hunting the rat population for their nutritious meat increasing the predation level by 4'
+        img = pygame.image.load('images/hunters.png')
+    elif rand_event == RandEvent.GARBAGE:
+        text = 'Garbage from a nearby town is being dumped in the forest decreasing environmental health by 1'
+        # img = pygame.image.load('images/.png'), need a picture for garbage
+    elif rand_event == RandEvent.RADIATION:
+        text = 'A nearby nuclear blast has caused radiation to decrease environmental health by 3'
+        img = pygame.image.load('images/nuclear_waste.png')
+    elif rand_event == RandEvent.AIR_QUALITY:
+        text = 'Poor air quality has decreased environmental health by 1'
+        img = pygame.image.load('images/air_quality.png')
+    elif rand_event == RandEvent.GREEN_BILL:
+        text = 'Congress has passed a wildlife protection bill increasing environmental health by 1'
+        img = pygame.image.load('images/congress.png')
+    elif rand_event == RandEvent.ELECTRIC_CAR:
+        text = 'Electric cars have been invented increasing environmental health by 1'
+        img = pygame.image.load('images/electric_car.png')
+    elif rand_event == RandEvent.OZONE:
+        text = 'A new hole has appeared in the ozone layer decreasing environmental health by 2'
+        img = pygame.image.load('images/ozone.png')
+
+    font = pygame.font.Font('fonts/autumn.ttf')
+    screen.fill(pygame.Color('darkslategrey'), (540, 560, 200, 100))
+    message = font.render(text, True, pygame.Color('white'))
+    screen.blit(message, (550, 570))
+    screen.blit(img, (580, 590))
 
 
 
