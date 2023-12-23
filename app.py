@@ -5,18 +5,20 @@ from rat import Rat
 # this can be used to pass all areas in need of updating to update() at once for efficiency
 # UPDATE_REGIONS = []
 
-PREDATION = 6
+PREDATION = 1
 TEMPERATURE = 65
-FOOD_SCARCITY = 6
+FOOD_SCARCITY = 1
 ENVIRONMENTAL_HEALTH = 5
 RATS = pygame.sprite.Group()
 REPRODUCE_QUEUE = []
+FOOD = []
+STARTING_RATS = 6
 RAT_STATS = {
-    'A': 4,
+    'A': STARTING_RATS,
     'a': 0,
-    'R': 4,
+    'R': STARTING_RATS,
     'r': 0,
-    'D': 4,
+    'D': STARTING_RATS,
     'd': 0,
     'M': 0,
     'p': 0,
@@ -24,7 +26,23 @@ RAT_STATS = {
     'w': 0
 }
 
+GENE_TO_WORD = {
+    'A': 'Agile',
+    'a': 'Slow',
+    'R': 'Rotund',
+    'r': 'Skinny',
+    'D': 'Dark',
+    'd': 'Light',
+    'M': 'Metabolic',
+    'p': 'Paralyzed',
+    's': 'Sprint',
+    'w': 'Albino'
+}
+
 MESSAGES = []
+
+img = pygame.image.load('images/food.png')
+FOOD_IMG = pygame.transform.scale(img, (12, 12))
 
 
 def gameLoop():
@@ -33,13 +51,17 @@ def gameLoop():
     print('-------------- New Game ----------------')
     screen = pygame.display.set_mode((1280, 720))
     env_params = (PREDATION, TEMPERATURE, FOOD_SCARCITY)
-    for i in range(4):
+    for i in range(STARTING_RATS):
         RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], env_params))
     # make sure initial rats dont die instantly
     for rat in RATS:
-        rat.lifespan = np.random.randint(8, 14)
+        rat.lifespan = np.random.randint(10, 15)
     clock = pygame.time.Clock()
     bg = pygame.image.load('images/forest_bg.jpg')
+
+    for i in range(13 - FOOD_SCARCITY):
+        addFood()
+
     running = True
     paused = False
 
@@ -54,6 +76,9 @@ def gameLoop():
                 paused = True
 
         while paused:
+            screen.fill(pygame.Color('white'), (1220, 70, 12, 100))
+            screen.fill(pygame.Color('white'), (1240, 70, 12, 100))
+            pygame.display.update((1150, 100, 100, 40))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -76,13 +101,15 @@ def gameLoop():
         temp_buttons = plusMinusButtons(screen, (145, 57))
         temp_plus = temp_buttons[0]
         temp_minus = temp_buttons[1]
-        fa_buttons = plusMinusButtons(screen, (184, 85))
+        fa_buttons = plusMinusButtons(screen, (158, 85))
         fa_plus = fa_buttons[0]
         fa_minus = fa_buttons[1]
         buttons = [pred_plus, pred_minus, temp_plus, temp_minus, fa_plus, fa_minus]
 
         displayRatStats(screen)
         displayMessages(screen)
+        displayEnvHealth(screen)
+        displayFood(screen)
 
         RATS.draw(screen)
         RATS.update(clock.get_time())
@@ -114,7 +141,16 @@ def newGeneration():
         for gene in new_rat.phenotype:
             RAT_STATS[gene] += 1
         RATS.add(new_rat)
+        checkForMutations(new_rat)
     REPRODUCE_QUEUE.clear()
+
+
+def checkForMutations(rat):
+    global GENE_TO_WORD
+    mutations = 'Mspw'
+    for gene in rat.phenotype:
+        if gene in mutations:
+            addMessage(f'A mutant {GENE_TO_WORD[gene].lower()} rat was born')
 
 
 def killRats():
@@ -127,8 +163,15 @@ def killRats():
                 RAT_STATS[gene] -= 1
 
 
+def addFood():
+    global FOOD
+    x = np.random.randint(250, 1125)
+    y = np.random.randint(550, 650)
+    FOOD.append((x, y))
+
+
 def displayRatStats(screen):
-    global RAT_STATS, RATS
+    global RAT_STATS, RATS, GENE_TO_WORD
     geneToWord = {
         'A': 'Agile',
         'a': 'Slow',
@@ -155,14 +198,26 @@ def displayRatStats(screen):
         y += 30
 
 
+def displayEnvHealth(screen):
+    global ENVIRONMENTAL_HEALTH
+    font = pygame.font.Font('fonts/autumn.ttf', 20)
+    surf = font.render(f"Environmental Heath: {ENVIRONMENTAL_HEALTH}", True, pygame.Color('white'))
+    screen.blit(surf, (1050, 50))
+
+
 def displayMessages(screen):
     global MESSAGES
-    y = 360
+    y = 450
     font = pygame.font.Font('fonts/autumn.ttf', 14)
     color = pygame.Color('white')
     for message in MESSAGES:
         screen.blit(font.render(message, True, color), (15, y))
         y += 25
+
+def displayFood(screen):
+    global FOOD, FOOD_IMG
+    for f in FOOD:
+        screen.blit(FOOD_IMG, (f[0], f[1], 12, 12))
 
 
 def displaySelectivePressures(screen):
@@ -172,12 +227,12 @@ def displaySelectivePressures(screen):
     screen.blits([
         (font.render('Predation:', True, color), (15, 20)),
         (font.render('Temperature:', True, color), (15, 50)),
-        (font.render('Food Availability:', True, color), (15, 80))
+        (font.render('Food Scarcity:', True, color), (15, 80))
     ])
     screen.blits([
-        (font.render(str(PREDATION), True, color), (145, 20)),
+        (font.render(str(PREDATION), True, color), (142, 20)),
         (font.render(str(TEMPERATURE), True, color), (165, 50)),
-        (font.render(str(FOOD_SCARCITY), True, color), (205, 80))
+        (font.render(str(FOOD_SCARCITY), True, color), (180, 80))
     ])
 
 
@@ -202,7 +257,7 @@ def plusMinusButtons(screen, location):
 
 
 def checkParamChange(event, button, index):
-    global PREDATION, TEMPERATURE, FOOD_SCARCITY
+    global PREDATION, TEMPERATURE, FOOD_SCARCITY, FOOD
     if button.collidepoint(event.pos):
         if index == 0:
             if PREDATION < 12:
@@ -223,10 +278,12 @@ def checkParamChange(event, button, index):
         if index == 4:
             if FOOD_SCARCITY < 12:
                 FOOD_SCARCITY += 1
+                FOOD.pop()
             return
         if index == 5:
             if FOOD_SCARCITY > 1:
                 FOOD_SCARCITY -= 1
+                addFood()
 
 
 def addMessage(message):

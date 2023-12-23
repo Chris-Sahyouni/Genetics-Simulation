@@ -1,21 +1,21 @@
 import numpy as np
 import pygame
-import math
 
 NUM_TRAITS = 3
 REPRODUCTION_RATE = 3
 MAX_LIFESPAN = 10
-MAX_OFFSPRING = 6
+MAX_OFFSPRING = 2
 
 # TODO:
 '''
-calculate lifespan,
-number of offspring,
-give rats id
-vertical movement
-fullscreen mode
-mutations
+ - the metabolic rats chefs hats are invisible
+ - add hawks and berries
+ - add a reset game button
+ - add random events
+ - outline the pause button
+ - events are randomly drawn every five seconds
 '''
+
 
 
 class Rat(pygame.sprite.Sprite):
@@ -38,6 +38,7 @@ class Rat(pygame.sprite.Sprite):
         self._time_till_angle = self.setRandomTime()
         self._angle = 1
         self._speed = self.setSpeed()
+        self._orientation = 1
         self._num_offspring = 0
         self._time_alive = 0
         self.reproduction_ready = False
@@ -45,21 +46,20 @@ class Rat(pygame.sprite.Sprite):
         self._lifespan = self.calculateLifespan()
         self.isalive = True
 
-
     @staticmethod
     def reproduce(male, female, params, env_health):
         global NUM_TRAITS
         child_genotype = []
-        mutations = [['M'], ['p', 's'], ['w']]
-        mutation_probs = [None, .0042, .0031, .0025, .0021, .0018]
+        mutations = [["w"], ["p", "s"], ["M"]]
+        mutation_probs = [None, 0.0042, 0.0031, 0.0025, 0.0021, 0.0018]
         mut_prob = mutation_probs[env_health]
         for i in range(NUM_TRAITS):
-            child_gene = ['', '']
+            child_gene = ["", ""]
             child_gene[0] = male.genotype[i][np.random.randint(0, 2)]
             child_gene[1] = female.genotype[i][np.random.randint(0, 2)]
 
             for j in range(2):
-                mutate = np.random.choice([True, False], p=[mut_prob, 1-mut_prob])
+                mutate = np.random.choice([True, False], p=[mut_prob, 1 - mut_prob])
                 if mutate:
                     child_gene[j] = np.random.choice(mutations[i])
 
@@ -70,21 +70,33 @@ class Rat(pygame.sprite.Sprite):
         female.reproduction_ready = False
         return Rat(child_genotype, params)
 
-
-
     def expressPhenotype(self):
         global NUM_TRAITS
         phenotype = []
         for i in range(NUM_TRAITS):
             gene = self.genotype[i]
             if gene[0].isupper() and gene[1].isupper():
-                phenotype.append(gene[0])
-            elif (gene[0].isupper() and gene[1].islower()) or (gene[0].islower() and gene[1].isupper()):
-                phenotype.append(gene[0].upper())
+                if gene[0] == "M" or gene[1] == "M":
+                    phenotype.append("M")
+                else:
+                    phenotype.append(gene[0])
+            elif (gene[0].isupper() and gene[1].islower()) or (
+                gene[0].islower() and gene[1].isupper()
+            ):
+                if gene[0].isupper():
+                    phenotype.append(gene[0])
+                else:
+                    phenotype.append(gene[1])
             else:
-                phenotype.append(gene[0])
+                if gene[0] == "a" or gene[1] == "a":
+                    phenotype.append("a")
+                elif gene[0] == 'd' or gene[1] == 'd':
+                    phenotype.append('d')
+                elif (gene[0] == "p" and gene[1] == "s") or (gene[1] == "p" and gene[0] == "s"):
+                    phenotype.append("p")
+                else:
+                    phenotype.append(gene[0])
         return phenotype
-
 
     def calculateScore(self, params):
         p = params[0]
@@ -92,26 +104,26 @@ class Rat(pygame.sprite.Sprite):
         fs = params[2]
         # note that these each start with a None value so that the indices line up the with the levels of the environmental parameters
         temp_table = {
-            'R': [None, 0.6, 0.7, 0.8, 0.9, 0.95, 1, 1, 0.9, 0.7, 0.5, 0.35, 0.2],
-            'r': [None, 0.2, 0.35, 0.5, 0.7, 0.9, 1, 1, 0.95, 0.9, 0.8, 0.7, 0.6],
-            'M': [None, 0.8, 0.9, 0.9, 0.9, 1, 1, 1, 1, 0.9, 0.9, 0.8, 0.8]
+            "R": [None, 0.6, 0.7, 0.8, 0.9, 0.95, 1, 1, 0.9, 0.7, 0.5, 0.35, 0.2],
+            "r": [None, 0.2, 0.35, 0.5, 0.7, 0.9, 1, 1, 0.95, 0.9, 0.8, 0.7, 0.6],
+            "M": [None, 0.8, 0.9, 0.9, 0.9, 1, 1, 1, 1, 0.9, 0.9, 0.8, 0.8],
         }
         fs_table = {
-            'A': [None, 0.4, 0.45, 0.55, 0.65, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 1, 1],
-            'a': [None, 0.1, 0.15, 0.2, 0.3, 0.4, 0.45, 0.55, 0.6, 0.75, 0.9, 0.95, 1],
-            'p': [None, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.3, 0.3, 0.3, 0.4, 0.4, 0.4],
-            's': [None, 0.7, 0.8, 0.8, 0.8, 0.9, 0.9, 0.9, 0.9, 1, 1, 1, 1]
+            "A": [None, 1, 1, 1, 0.95, 0.9, 0.85, 0.8, 0.75, 0.65, 0.55, 0.45, 0.4],
+            "a": [None, 1, 0.95, 0.9, 0.75, 0.6, 0.55, 0.45, 0.4, 0.3, 0.2, 0.15, 0.1],
+            "p": [None, 0.4, 0.4, 0.4, 0.3, 0.3, 0.3, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1],
+            "s": [None, 1, 1, 1, 1, 0.9, 0.9, 0.9, 0.9, 0.8, 0.8, 0.8, 0.7],
         }
         pred_on_speed = {
-            'A': [None, 0.4, 0.45, 0.55, 0.65, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 1, 1],
-            'a': [None, 0.1, 0.15, 0.2, 0.3, 0.4, 0.45, 0.55, 0.6, 0.75, 0.9, 0.95, 1],
-            'p': [None, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.3, 0.3, 0.3, 0.4, 0.4, 0.4],
-            's': [None, 0.7, 0.8, 0.8, 0.8, 0.9, 0.9, 0.9, 0.9, 1, 1, 1, 1]
+            "A": [None, 1, 1, 1, 0.95, 0.9, 0.85, 0.8, 0.75, 0.65, 0.55, 0.45, 0.4],
+            "a": [None, 1, 0.95, 0.9, 0.75, 0.6, 0.55, 0.45, 0.4, 0.3, 0.2, 0.15, 0.1],
+            "p": [None, 0.4, 0.4, 0.4, 0.3, 0.3, 0.3, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1],
+            "s": [None, 1, 1, 1, 1, 0.9, 0.9, 0.9, 0.9, 0.8, 0.8, 0.8, 0.7],
         }
         pred_on_color = {
-            'D': [None, 0.4, 0.45, 0.55, 0.65, 0.75, 0.8, 0.85, 0.9, 0.95, 1, 1, 1],
-            'd': [None, 0.1, 0.15, 0.2, 0.3, 0.4, 0.45, 0.55, 0.6, 0.75, 0.9, 0.95, 1],
-            'w': [None, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.3, 0.3, 0.3, 0.4, 0.4, 0.4]
+            "D": [None, 1, 1, 1, 0.95, 0.9, 0.85, 0.8, 0.75, 0.65, 0.55, 0.45, 0.4],
+            "d": [None, 1, 0.95, 0.9, 0.75, 0.6, 0.55, 0.45, 0.4, 0.3, 0.2, 0.15, 0.1],
+            "w": [None, 0.4, 0.4, 0.4, 0.3, 0.3, 0.3, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1],
         }
         score = 0
         color = self.phenotype[0]
@@ -124,92 +136,52 @@ class Rat(pygame.sprite.Sprite):
         score /= 4
         return score
 
-
-
     def calculateLifespan(self):
         global MAX_LIFESPAN
         lifespan = (self._score * MAX_LIFESPAN) + 4
-        prob = self._score / 2.5
-        lifespan = np.random.choice([lifespan, 3], p=[1-prob, prob])
+        prob = self._score / 3
+        lifespan = np.random.choice([lifespan, 3], p=[1 - prob, prob])
         return lifespan
 
-
-
-
-    # def lifespan(self):
-    #     lifespan = (self.score / 3) + 10
-    #     mortality_rate = 1 - ((self.score / 32) + .5)
-    #     mortality_rate /= 2.5
-    #     mortality_rate += .05
-    #     sterile = np.random.choice((True, False), p=[mortality_rate, 1 - mortality_rate])
-    #     # print('Rat mortality rate:', mortality_rate * 100)
-    #     if sterile:
-    #         lifespan = 3
-    #     # print('Rat will live for:', lifespan)
-    #     return lifespan
-
-
-
-    # def calculateScore(self, params):
-    #     pvector = list(params)
-    #     pvector[1] /= 5
-    #     pvector[1] -= 6
-    #     dval, aval, rval = 0, 0, 0
-    #     if self.phenotype[0] == 'D':
-    #         dval = 1
-    #     else:
-    #         dval = -1
-    #     if self. phenotype[1] == 'A':
-    #         aval = 1
-    #     else:
-    #         aval = -1
-    #     if self.phenotype[2] == 'R':
-    #         rval = 1
-    #     else:
-    #         rval = -1
-    #     M = np.array([[dval, 0, 0],
-    #                   [aval, 0, aval],
-    #                   [0, -1*rval, 0]])
-    #     score_vector = M @ pvector
-    #     # print(score_vector)
-    #     return score_vector.mean()
-
-
-
     def determineSize(self):
-        if self.phenotype[2] == 'R':
+        if self.phenotype[2] == "R":
             return 50
         return 50
 
-
     def selectImage(self):
         img = None
-        if self.phenotype[0] == 'D':
-            if self.phenotype[2] == 'M':
-                img = pygame.load('images/dark_metabolic.png')
+        if self.phenotype[0] == "D":
+            if self.phenotype[2] == "M":
+                img = pygame.image.load("images/dark_metabolic.png")
             else:
-                img = pygame.image.load('images/dark_rat.png')
-        elif self.phenotype[0] == 'd':
-            if self.phenotype[2] == 'M':
-                img = pygame.image.load('images/light_metabolic.png')
+                img = pygame.image.load("images/dark_rat.png")
+        elif self.phenotype[0] == "d":
+            if self.phenotype[2] == "M":
+                img = pygame.image.load("images/light_metabolic.png")
             else:
-                img = pygame.image.load('images/light_rat.png')
+                img = pygame.image.load("images/light_rat.png")
         else:
-            if self.phenotype[2] == 'M':
-                img = pygame.load('images/albino_metabolic.png')
+            if self.phenotype[2] == "M":
+                img = pygame.image.load("images/albino_metabolic.png")
             else:
-                img = pygame.load('images/albinor_rat.png')
-        if self.phenotype[2] == 'R' or self.phenotype[2] == 'M':
+                img = pygame.image.load("images/albino_rat.png")
+
+        if self.phenotype[2] == "R":
             return pygame.transform.scale(img, (self._size, self._size))
+        elif self.phenotype[2] == 'M':
+            return pygame.transform.scale(img, (self._size * 2, self._size * 2))
         else:
             return pygame.transform.scale(img, (self._size / 2, self._size))
-
 
     def randomStartPos(self):
         x = np.random.randint(300, 1000)
         y = np.random.randint(500, 650)
         return [x, y]
 
+    def setOrientation(self):
+        if self._orientation != self._direction:
+            self.image = pygame.transform.flip(self.image, True, False)
+            self._orientation = self._direction
 
     def setDirection(self):
         if self.rect[0] < 300 + self._size:
@@ -218,22 +190,20 @@ class Rat(pygame.sprite.Sprite):
             self._direction = -1
         else:
             self._direction = np.random.choice([-1, 1])
-
+        self.setOrientation()
 
     def setSpeed(self):
-        if self.phenotype[1] == 's':
+        if self.phenotype[1] == "s":
             return 10
-        elif self.phenotype[1] == 'p':
+        elif self.phenotype[1] == "p":
             return 0
-        elif self.phenotype[1] == 'A':
+        elif self.phenotype[1] == "A":
             return 3
         else:
             return 1
 
-
     def setRandomTime(self):
-        return ((np.random.rand() * 3) + .5) * 1000
-
+        return ((np.random.rand() * 3) + 0.5) * 1000
 
     def _updateMovement(self, time_elapsed):
         pygame.sprite.Sprite.update(self, time_elapsed)
@@ -249,19 +219,17 @@ class Rat(pygame.sprite.Sprite):
             self._direction = 0
             self._time_till_move = self.setRandomTime()
 
-        if self.rect[0] > 1200:
+        if self.rect[0] > 1150:
             self._direction = 0
             self._time_till_move = self.setRandomTime()
 
         self.rect[0] += self._speed * self._direction
-
 
     def _updateAngle(self, time_elapsed):
         self._time_till_angle -= time_elapsed
         if self._time_till_angle <= 0:
             self._rotateImage()
             self._time_till_angle = self.setRandomTime()
-
 
     def update(self, time_elapsed):
         global MAX_OFFSPRING
@@ -278,19 +246,15 @@ class Rat(pygame.sprite.Sprite):
             if time_mature >= self._num_offspring * REPRODUCTION_RATE * 1000:
                 self.reproduction_ready = True
 
-
-
     def _rotateImage(self):
-        new_img = pygame.transform.rotate(self.image, -self._angle * 45)
+        new_img = pygame.transform.rotate(
+            self.image, -self._angle * 45 * self._orientation
+        )
         buffered_rect = self.rect
         self.image = new_img
         self.rect = buffered_rect
-        self.rect[1] -= 10
+        self.rect[1] -= 20
         self._angle = -self._angle
-
 
     def draw(self, screen):
         screen.blit(self.surf, self.rect.topleft)
-
-
-
