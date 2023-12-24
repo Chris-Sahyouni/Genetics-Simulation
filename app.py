@@ -127,6 +127,7 @@ def gameLoop():
         screen.blit(bg, [0,0])
         side_panel = pygame.Rect(0, 0, 235, 720)
         screen.fill(pygame.Color('gray50'), side_panel)
+        screen.fill(pygame.Color('gray50'), (1050, 0, 230, 90))
 
         screen.fill(pygame.Color('black'), (15, 120, 200, 1))
         screen.fill(pygame.Color('black'), (15, 455, 200, 1))
@@ -342,7 +343,7 @@ def displayEnvHealth(screen):
     global ENVIRONMENTAL_HEALTH
     font = pygame.font.Font('fonts/autumn.ttf', 20)
     surf = font.render(f"Environmental Heath: {ENVIRONMENTAL_HEALTH}", True, pygame.Color('white'))
-    screen.blit(surf, (1050, 50))
+    screen.blit(surf, (1065, 10))
 
 
 def displayMessages(screen):
