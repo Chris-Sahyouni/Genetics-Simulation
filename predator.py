@@ -75,7 +75,5 @@ class Predator(pygame.sprite.Sprite):
         self.rect[0] += self._speed * self._direction
 
 
-
-
     def draw(self, screen):
         screen.blit(self.surf, self.rect.topleft)

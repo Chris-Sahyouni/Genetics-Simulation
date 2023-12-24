@@ -142,7 +142,7 @@ class Rat(pygame.sprite.Sprite):
     def calculateLifespan(self):
         global MAX_LIFESPAN
         lifespan = (self._score * MAX_LIFESPAN) + 4
-        prob = self._score / 3.5
+        prob = self._score / 3
         lifespan = np.random.choice([lifespan, 3], p=[1 - prob, prob])
         return lifespan
 

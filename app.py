@@ -107,7 +107,7 @@ def gameLoop():
             screen.fill(pygame.Color('white'), (1220, 70, 12, 50))
             screen.fill(pygame.Color('white'), (1240, 70, 12, 50))
             if rand_event != RandEvent.NO_EVENT:
-                displayRandomEvent(screen, rand_event)
+                rand_event_message = displayRandomEvent(screen, rand_event)
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -119,6 +119,9 @@ def gameLoop():
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                     clock = pygame.time.Clock()
                     paused = False
+                    if rand_event != RandEvent.NO_EVENT:
+                        addMessage(rand_event_message)
+                        executeRandEvent(rand_event)
 
 
         screen.blit(bg, [0,0])
@@ -181,41 +184,80 @@ def displayRandomEvent(screen, rand_event):
     text = ""
     img = pygame.surface.Surface((0,0))
     if rand_event == RandEvent.VOLCANO:
-        text = f'A nearby volcano has erupted killing 90% of the rat population!'
+        text = ['A nearby volcano has erupted killing', f'90% of the rat population!']
         img = pygame.image.load('images/volcano.png')
     elif rand_event == RandEvent.DISEASE:
-        text = f'An infectious disease called the Modelovirus has killed 60% of the rat population!'
+        text = ['An infectious disease called the Modelovirus', f'has killed 60% of the rat population!']
         img = pygame.image.load('images/virus.png')
     elif rand_event == RandEvent.HUNTERS:
-        # problematic, what if predation is already at or close to max
-        text = 'Hunters have begun hunting the rat population for their nutritious meat increasing the predation level by 4'
+        text = ['Hunters have begun hunting the rat population for', 'their nutritious meat increasing the predation level by 4']
         img = pygame.image.load('images/hunters.png')
     elif rand_event == RandEvent.GARBAGE:
-        text = 'Garbage from a nearby town is being dumped in the forest decreasing environmental health by 1'
+        text = ['Garbage from a nearby town is being dumped', 'in the forest decreasing environmental health by 1']
         # img = pygame.image.load('images/.png'), need a picture for garbage
     elif rand_event == RandEvent.RADIATION:
-        text = 'A nearby nuclear blast has caused radiation to decrease environmental health by 3'
+        text = ['A nearby nuclear blast has caused radiation', 'to decrease environmental health by 3']
         img = pygame.image.load('images/nuclear_waste.png')
     elif rand_event == RandEvent.AIR_QUALITY:
-        text = 'Poor air quality has decreased environmental health by 1'
+        text = ['Poor air quality has decreased environmental', 'health by 1']
         img = pygame.image.load('images/air_quality.png')
     elif rand_event == RandEvent.GREEN_BILL:
-        text = 'Congress has passed a wildlife protection bill increasing environmental health by 1'
+        text = ['Congress has passed a wildlife protection', 'bill increasing environmental health by 1']
         img = pygame.image.load('images/congress.png')
     elif rand_event == RandEvent.ELECTRIC_CAR:
-        text = 'Electric cars have been invented increasing environmental health by 1'
+        text = ['Electric cars have been invented', 'increasing environmental health by 1']
         img = pygame.image.load('images/electric_car.png')
     elif rand_event == RandEvent.OZONE:
-        text = 'A new hole has appeared in the ozone layer decreasing environmental health by 2'
+        text = ['A new hole has appeared in the ozone', 'layer decreasing environmental health by 2']
         img = pygame.image.load('images/ozone.png')
 
-    font = pygame.font.Font('fonts/autumn.ttf')
-    screen.fill(pygame.Color('darkslategrey'), (540, 560, 200, 100))
-    message = font.render(text, True, pygame.Color('white'))
-    screen.blit(message, (550, 570))
-    screen.blit(img, (580, 590))
+    img = pygame.transform.scale(img, (140, 140))
+    font = pygame.font.Font('fonts/autumn.ttf', 20)
+    screen.fill(pygame.Color('gray50'), (500, 200, 400, 300))
+    for i, m in enumerate(text):
+        message = font.render(m, True, pygame.Color('white'))
+        screen.blit(message, (510, 210 + (i * 20)))
+    screen.blit(img, (635, 285))
+    return text
 
 
+
+def executeRandEvent(rand_event):
+    global RATS, RandEvent, PREDATION, ENVIRONMENTAL_HEALTH
+    if rand_event == RandEvent.NO_EVENT:
+        return
+    if rand_event == RandEvent.VOLCANO:
+        i = 0
+        n = len(RATS)
+        for rat in RATS:
+            kill(rat)
+            i += 1
+            if i == int(.9 * n):
+                break
+        return
+    if rand_event == RandEvent.DISEASE:
+        i = 0
+        n = len(RATS)
+        for rat in RATS:
+            kill(rat)
+            i += 1
+            if i == int(.6 * n):
+                break
+        return
+    if rand_event == RandEvent.HUNTERS:
+        PREDATION = min(12, PREDATION + 4)
+        return
+    if rand_event == RandEvent.GARBAGE or rand_event == RandEvent.AIR_QUALITY:
+        ENVIRONMENTAL_HEALTH = max(ENVIRONMENTAL_HEALTH - 1, 1)
+        return
+    if rand_event == RandEvent.GREEN_BILL or rand_event == RandEvent.ELECTRIC_CAR:
+        ENVIRONMENTAL_HEALTH = min(ENVIRONMENTAL_HEALTH + 1, 5)
+        return
+    if rand_event == RandEvent.RADIATION:
+        ENVIRONMENTAL_HEALTH = max(ENVIRONMENTAL_HEALTH - 3, 1)
+        return
+    if rand_event == RandEvent.OZONE:
+        ENVIRONMENTAL_HEALTH = max(ENVIRONMENTAL_HEALTH - 2, 1)
 
 
 def newGeneration():
@@ -248,12 +290,17 @@ def killRats():
     global RATS, RAT_STATS
     for rat in RATS:
         if not rat.isalive:
-            rat.kill()
-            RATS.remove(rat)
-            for gene in rat.phenotype:
-                RAT_STATS[gene] -= 1
+            kill(rat)
         if len(RATS) == 0:
             addMessage('The Rat population has gone extinct')
+
+
+def kill(rat):
+    global RATS, RAT_STATS
+    rat.kill()
+    RATS.remove(rat)
+    for gene in rat.phenotype:
+        RAT_STATS[gene] -= 1
 
 
 def addFood():
@@ -302,10 +349,17 @@ def displayMessages(screen):
     global MESSAGES
     y = 465
     font = pygame.font.Font('fonts/autumn.ttf', 14)
+    sm = pygame.font.Font('fonts/autumn.ttf', 11)
     color = pygame.Color('white')
     for message in MESSAGES:
-        screen.blit(font.render(message, True, color), (15, y))
-        y += 25
+        i = 0
+        if isinstance(message, list):
+            for m in message:
+                screen.blit(sm.render(m, True, color), (15, y + i*10))
+                i += 1
+        else:
+            screen.blit(font.render(message, True, color), (15, y))
+        y += 25 + i*10
 
 def displayFood(screen):
     global FOOD, FOOD_IMG
@@ -360,7 +414,8 @@ def checkParamChange(event, button, index):
         if index == 1:
             if PREDATION > 1:
                 PREDATION -= 1
-                PREDATORS.pop()
+                pred = PREDATORS.sprites().pop()
+                pred.kill()
             return
         if index == 2:
             if TEMPERATURE < 90:
