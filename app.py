@@ -104,8 +104,8 @@ def gameLoop():
 
         while paused:
             clock = None
-            screen.fill(pygame.Color('white'), (1220, 70, 12, 50))
-            screen.fill(pygame.Color('white'), (1240, 70, 12, 50))
+            screen.fill(pygame.Color('white'), (1220, 90, 12, 50))
+            screen.fill(pygame.Color('white'), (1240, 90, 12, 50))
             if rand_event != RandEvent.NO_EVENT:
                 rand_event_message = displayRandomEvent(screen, rand_event)
             pygame.display.flip()
@@ -129,8 +129,10 @@ def gameLoop():
         screen.fill(pygame.Color('gray50'), side_panel)
         screen.fill(pygame.Color('gray50'), (1050, 0, 230, 90))
 
-        screen.fill(pygame.Color('black'), (15, 120, 200, 1))
-        screen.fill(pygame.Color('black'), (15, 455, 200, 1))
+        displayNumRats(screen)
+
+        screen.fill(pygame.Color('black'), (15, 150, 200, 1))
+        screen.fill(pygame.Color('black'), (15, 485, 200, 1))
 
         displaySelectivePressures(screen)
         pred_buttons = plusMinusButtons(screen, (118, 26))
@@ -195,10 +197,10 @@ def displayRandomEvent(screen, rand_event):
         img = pygame.image.load('images/hunters.png')
     elif rand_event == RandEvent.GARBAGE:
         text = ['Garbage from a nearby town is being dumped', 'in the forest decreasing environmental health by 1']
-        # img = pygame.image.load('images/.png'), need a picture for garbage
+        img = pygame.image.load('images/garbage.png')
     elif rand_event == RandEvent.RADIATION:
         text = ['A nearby nuclear blast has caused radiation', 'to decrease environmental health by 3']
-        img = pygame.image.load('images/nuclear_waste.png')
+        img = pygame.image.load('images/radiation.png')
     elif rand_event == RandEvent.AIR_QUALITY:
         text = ['Poor air quality has decreased environmental', 'health by 1']
         img = pygame.image.load('images/air_quality.png')
@@ -325,12 +327,12 @@ def displayRatStats(screen):
         's': 'Sprint',
         'w': 'Albino'
     }
-    y = 150
+    y = 180
     n = len(RATS) or 1
     color = pygame.Color('black')
     font = pygame.font.Font('fonts/autumn.ttf', 16)
-    screen.blit(font.render('#', True, color), (95, 130))
-    screen.blit(font.render('%', True, color), (125, 130))
+    screen.blit(font.render('#', True, color), (95, 160))
+    screen.blit(font.render('%', True, color), (125, 160))
     for gene in RAT_STATS:
         screen.blit(font.render(geneToWord[gene], True, color), (15, y))
         screen.blit(font.render(str(RAT_STATS[gene]), True, color), (95, y))
@@ -339,16 +341,25 @@ def displayRatStats(screen):
         y += 30
 
 
+def displayNumRats(screen):
+    global RATS
+    font = pygame.font.Font('fonts/autumn.ttf', 17)
+    surf = font.render(f"Population size: {len(RATS)}", True, pygame.Color('black'))
+    screen.blit(surf, (15, 128))
+
 def displayEnvHealth(screen):
     global ENVIRONMENTAL_HEALTH
-    font = pygame.font.Font('fonts/autumn.ttf', 20)
-    surf = font.render(f"Environmental Heath: {ENVIRONMENTAL_HEALTH}", True, pygame.Color('white'))
-    screen.blit(surf, (1065, 10))
-
+    font1 = pygame.font.Font('fonts/autumn.ttf', 20)
+    font2 = pygame.font.Font('fonts/autumn.ttf', 16)
+    eh_surf = font1.render(f"Environmental Heath: {ENVIRONMENTAL_HEALTH}", True, pygame.Color('white'))
+    rates = [None, 1.67, 1.25, 1, .84, .7]
+    mr_surf = font2.render(f"Mutation Rate: {rates[ENVIRONMENTAL_HEALTH]}%", True, pygame.Color('white'))
+    screen.blit(eh_surf, (1065, 10))
+    screen.blit(mr_surf, (1085, 50))
 
 def displayMessages(screen):
     global MESSAGES
-    y = 465
+    y = 495
     font = pygame.font.Font('fonts/autumn.ttf', 14)
     sm = pygame.font.Font('fonts/autumn.ttf', 11)
     color = pygame.Color('white')
@@ -361,6 +372,7 @@ def displayMessages(screen):
         else:
             screen.blit(font.render(message, True, color), (15, y))
         y += 25 + i*10
+
 
 def displayFood(screen):
     global FOOD, FOOD_IMG

@@ -10,12 +10,7 @@ MAX_OFFSPRING = 6
 '''
  - the metabolic rats chefs hats are invisible
  - add a reset game button
- - outline the pause button
- - make a box for environmental health and mutation rate
- - fix problem where rats rotating moves it down
  - there should probably not be any random events for the first 15 seconds or so
- - the hunters event will increase the number of predator sprites unintentionally
- - display mutation rate under environmental health
 '''
 
 
