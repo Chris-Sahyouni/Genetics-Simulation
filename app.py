@@ -55,9 +55,13 @@ GENE_TO_WORD = {
     'w': 'Albino'
 }
 
+
+INITIAL_MESSAGES = ['Press \"Space\" to pause the game', 'Press \"Esc\" to close the game', 'Press \"R\" to restart the game']
 MESSAGES = []
+MESSAGES.extend(INITIAL_MESSAGES)
 
 TIME_TILL_EVENT = 0
+EVENT_SKIP_COUNTER = 0
 
 img = pygame.image.load('images/food.png')
 FOOD_IMG = pygame.transform.scale(img, (12, 12))
@@ -66,20 +70,14 @@ FOOD_IMG = pygame.transform.scale(img, (12, 12))
 def gameLoop():
     global PREDATION, TEMPERATURE, FOOD_SCARCITY, RATS, PREDATORS
     pygame.init()
-    print('-------------- New Game ----------------')
-
+    icon = pygame.image.load('images/dark_rat.png')
+    pygame.display.set_icon(icon)
+    pygame.display.set_caption('Rats on the Run!')
     screen = pygame.display.set_mode((1280, 720))
 
-    env_params = (PREDATION, TEMPERATURE, FOOD_SCARCITY)
-
-    for i in range(STARTING_RATS):
-        RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], env_params))
+    initRats()
 
     PREDATORS.add(Predator())
-
-    # make sure initial rats dont die instantly
-    for rat in RATS:
-        rat.lifespan = np.random.randint(10, 15)
 
     clock = pygame.time.Clock()
 
@@ -101,11 +99,15 @@ def gameLoop():
                     checkParamChange(event, button, i)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 paused = True
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                resetGame()
 
         while paused:
             clock = None
-            screen.fill(pygame.Color('white'), (1220, 90, 12, 50))
-            screen.fill(pygame.Color('white'), (1240, 90, 12, 50))
+            screen.fill(pygame.Color('white'), (1220, 100, 12, 50))
+            screen.fill(pygame.Color('white'), (1240, 100, 12, 50))
             if rand_event != RandEvent.NO_EVENT:
                 rand_event_message = displayRandomEvent(screen, rand_event)
             pygame.display.flip()
@@ -161,6 +163,7 @@ def gameLoop():
         killRats()
 
         rand_event = generateRandomEvent(clock.get_time())
+
         if rand_event != 0:
             paused = True
 
@@ -172,15 +175,44 @@ def gameLoop():
 
 # ---------------------------------------------------------------------------- #
 
+def resetGame():
+    global RATS, ENVIRONMENTAL_HEALTH, PREDATION, FOOD_SCARCITY, TEMPERATURE, PREDATORS, FOOD, MESSAGES, INITIAL_MESSAGES, EVENT_SKIP_COUNTER
+    RATS.empty()
+    initRats()
+    PREDATION = 1
+    TEMPERATURE = 65
+    FOOD_SCARCITY = 1
+    ENVIRONMENTAL_HEALTH = 5
+    PREDATORS.empty()
+    PREDATORS.add(Predator())
+    FOOD.clear()
+    addFood()
+    MESSAGES.clear()
+    MESSAGES.extend(INITIAL_MESSAGES)
+    EVENT_SKIP_COUNTER = 0
+
+
+def initRats():
+    global RATS, STARTING_RATS
+    for _ in range(STARTING_RATS):
+        RATS.add(Rat([['D', 'd'], ['A', 'a'], ['R', 'r']], (1, 65, 1)))
+    for rat in RATS:
+        rat.lifespan = np.random.randint(10, 15)
+
 
 def generateRandomEvent(time_elapsed):
-    global TIME_TILL_EVENT
+    global TIME_TILL_EVENT, EVENT_SKIP_COUNTER, RATS
     TIME_TILL_EVENT += time_elapsed
+    re = 0
     if TIME_TILL_EVENT >= 5000:
         TIME_TILL_EVENT = 0
         re = np.random.choice(list(range(10)), p=[.94, .01, .01, .01, .005, .005, .005, .005, .005, .005])
-        return RandEvent(re)
-    return 0
+    if EVENT_SKIP_COUNTER < 3:
+        re = 0
+    EVENT_SKIP_COUNTER += 1
+    if len(RATS) >= 130:
+        re = np.random.randint(1, 3)
+    return RandEvent(re)
 
 
 def displayRandomEvent(screen, rand_event):
@@ -216,7 +248,7 @@ def displayRandomEvent(screen, rand_event):
 
     img = pygame.transform.scale(img, (140, 140))
     font = pygame.font.Font('fonts/autumn.ttf', 20)
-    screen.fill(pygame.Color('gray50'), (500, 200, 400, 300))
+    screen.fill(pygame.Color('gray50'), (500, 200, 400, 320))
     for i, m in enumerate(text):
         message = font.render(m, True, pygame.Color('white'))
         screen.blit(message, (510, 210 + (i * 20)))

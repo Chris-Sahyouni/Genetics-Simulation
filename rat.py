@@ -9,10 +9,7 @@ MAX_OFFSPRING = 6
 # TODO:
 '''
  - the metabolic rats chefs hats are invisible
- - add a reset game button
- - there should probably not be any random events for the first 15 seconds or so
 '''
-
 
 
 class Rat(pygame.sprite.Sprite):
