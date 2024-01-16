@@ -3,6 +3,8 @@ import numpy as np
 from rat import Rat
 from predator import Predator
 from enum import IntEnum
+from utils import resource_path
+import os
 
 # this can be used to pass all areas in need of updating to update() at once for efficiency
 # UPDATE_REGIONS = []
@@ -63,14 +65,14 @@ MESSAGES.extend(INITIAL_MESSAGES)
 TIME_TILL_EVENT = 0
 EVENT_SKIP_COUNTER = 0
 
-img = pygame.image.load('images/food.png')
+img = pygame.image.load(resource_path('images/food.png'))
 FOOD_IMG = pygame.transform.scale(img, (12, 12))
 
 
 def gameLoop():
     global PREDATION, TEMPERATURE, FOOD_SCARCITY, RATS, PREDATORS
     pygame.init()
-    icon = pygame.image.load('images/dark_rat.png')
+    icon = pygame.image.load(resource_path('images/dark_rat.png'))
     pygame.display.set_icon(icon)
     pygame.display.set_caption('Rats on the Run!')
     screen = pygame.display.set_mode((1280, 720))
@@ -81,7 +83,7 @@ def gameLoop():
 
     clock = pygame.time.Clock()
 
-    bg = pygame.image.load('images/forest_bg.jpg')
+    bg = pygame.image.load(resource_path('images/forest_bg.png'))
 
     for i in range(13 - FOOD_SCARCITY):
         addFood()
@@ -220,34 +222,34 @@ def displayRandomEvent(screen, rand_event):
     img = pygame.surface.Surface((0,0))
     if rand_event == RandEvent.VOLCANO:
         text = ['A nearby volcano has erupted killing', f'90% of the rat population!']
-        img = pygame.image.load('images/volcano.png')
+        img = pygame.image.load(resource_path('images/volcano.png'))
     elif rand_event == RandEvent.DISEASE:
         text = ['An infectious disease called the Modelovirus', f'has killed 60% of the rat population!']
-        img = pygame.image.load('images/virus.png')
+        img = pygame.image.load(resource_path('images/virus.png'))
     elif rand_event == RandEvent.HUNTERS:
         text = ['Hunters have begun hunting the rat population for', 'their nutritious meat increasing the predation level by 4']
-        img = pygame.image.load('images/hunters.png')
+        img = pygame.image.load(resource_path('images/hunters.png'))
     elif rand_event == RandEvent.GARBAGE:
         text = ['Garbage from a nearby town is being dumped', 'in the forest decreasing environmental health by 1']
-        img = pygame.image.load('images/garbage.png')
+        img = pygame.image.load(resource_path('images/garbage.png'))
     elif rand_event == RandEvent.RADIATION:
         text = ['A nearby nuclear blast has caused radiation', 'to decrease environmental health by 3']
-        img = pygame.image.load('images/radiation.png')
+        img = pygame.image.load(resource_path('images/radiation.png'))
     elif rand_event == RandEvent.AIR_QUALITY:
         text = ['Poor air quality has decreased environmental', 'health by 1']
-        img = pygame.image.load('images/air_quality.png')
+        img = pygame.image.load(resource_path('images/air_quality.png'))
     elif rand_event == RandEvent.GREEN_BILL:
         text = ['Congress has passed a wildlife protection', 'bill increasing environmental health by 1']
-        img = pygame.image.load('images/congress.png')
+        img = pygame.image.load(resource_path('images/congress.png'))
     elif rand_event == RandEvent.ELECTRIC_CAR:
         text = ['Electric cars have been invented', 'increasing environmental health by 1']
-        img = pygame.image.load('images/electric_car.png')
+        img = pygame.image.load(resource_path('images/electric_car.png'))
     elif rand_event == RandEvent.OZONE:
         text = ['A new hole has appeared in the ozone', 'layer decreasing environmental health by 2']
-        img = pygame.image.load('images/ozone.png')
+        img = pygame.image.load(resource_path('images/ozone.png'))
 
     img = pygame.transform.scale(img, (140, 140))
-    font = pygame.font.Font('fonts/autumn.ttf', 20)
+    font = pygame.font.Font(resource_path('fonts/autumn.ttf'), 20)
     screen.fill(pygame.Color('gray50'), (500, 200, 400, 320))
     for i, m in enumerate(text):
         message = font.render(m, True, pygame.Color('white'))
@@ -362,7 +364,7 @@ def displayRatStats(screen):
     y = 180
     n = len(RATS) or 1
     color = pygame.Color('black')
-    font = pygame.font.Font('fonts/autumn.ttf', 16)
+    font = pygame.font.Font(resource_path('fonts/autumn.ttf'), 16)
     screen.blit(font.render('#', True, color), (95, 160))
     screen.blit(font.render('%', True, color), (125, 160))
     for gene in RAT_STATS:
@@ -375,14 +377,14 @@ def displayRatStats(screen):
 
 def displayNumRats(screen):
     global RATS
-    font = pygame.font.Font('fonts/autumn.ttf', 17)
+    font = pygame.font.Font(resource_path('fonts/autumn.ttf'), 17)
     surf = font.render(f"Population size: {len(RATS)}", True, pygame.Color('black'))
     screen.blit(surf, (15, 128))
 
 def displayEnvHealth(screen):
     global ENVIRONMENTAL_HEALTH
-    font1 = pygame.font.Font('fonts/autumn.ttf', 20)
-    font2 = pygame.font.Font('fonts/autumn.ttf', 16)
+    font1 = pygame.font.Font(resource_path('fonts/autumn.ttf'), 20)
+    font2 = pygame.font.Font(resource_path('fonts/autumn.ttf'), 16)
     eh_surf = font1.render(f"Environmental Heath: {ENVIRONMENTAL_HEALTH}", True, pygame.Color('white'))
     rates = [None, 1.67, 1.25, 1, .84, .7]
     mr_surf = font2.render(f"Mutation Rate: {rates[ENVIRONMENTAL_HEALTH]}%", True, pygame.Color('white'))
@@ -392,8 +394,8 @@ def displayEnvHealth(screen):
 def displayMessages(screen):
     global MESSAGES
     y = 495
-    font = pygame.font.Font('fonts/autumn.ttf', 14)
-    sm = pygame.font.Font('fonts/autumn.ttf', 11)
+    font = pygame.font.Font(resource_path('fonts/autumn.ttf'), 14)
+    sm = pygame.font.Font(resource_path('fonts/autumn.ttf'), 11)
     color = pygame.Color('white')
     for message in MESSAGES:
         i = 0
@@ -414,7 +416,7 @@ def displayFood(screen):
 
 def displaySelectivePressures(screen):
     global PREDATION, TEMPERATURE, FOOD_SCARCITY
-    font = pygame.font.Font('fonts/autumn.ttf', 22)
+    font = pygame.font.Font(resource_path('fonts/autumn.ttf'), 22)
     color = pygame.Color('black')
     screen.blits([
         (font.render('Predation:', True, color), (15, 20)),
@@ -432,7 +434,7 @@ def displaySelectivePressures(screen):
 def plusMinusButtons(screen, location):
     x = location[0]
     y = location[1]
-    font = pygame.font.Font('fonts/autumn.ttf', 20)
+    font = pygame.font.Font(resource_path('fonts/autumn.ttf'), 20)
     plus_box = pygame.Rect(x, y - 2, 15, 15)
     minus_box = pygame.Rect(x, y + 9, 15, 12)
     gray_plus = pygame.Color('green3')

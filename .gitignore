@@ -1,2 +1,4 @@
-__pycache__/
-/__pycache__
+app.spec
+/build/
+/dist/
+/__pycache__/

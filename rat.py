@@ -1,15 +1,11 @@
 import numpy as np
 import pygame
+from utils import resource_path
 
 NUM_TRAITS = 3
 REPRODUCTION_RATE = 3
 MAX_LIFESPAN = 10
 MAX_OFFSPRING = 6
-
-# TODO:
-'''
- - the metabolic rats chefs hats are invisible
-'''
 
 
 class Rat(pygame.sprite.Sprite):
@@ -146,19 +142,19 @@ class Rat(pygame.sprite.Sprite):
         img = None
         if self.phenotype[0] == "D":
             if self.phenotype[2] == "M":
-                img = pygame.image.load("images/dark_metabolic.png")
+                img = pygame.image.load(resource_path('images/dark_metabolic.png'))
             else:
-                img = pygame.image.load("images/dark_rat.png")
+                img = pygame.image.load(resource_path('images/dark_rat.png'))
         elif self.phenotype[0] == "d":
             if self.phenotype[2] == "M":
-                img = pygame.image.load("images/light_metabolic.png")
+                img = pygame.image.load(resource_path('images/light_metabolic.png'))
             else:
-                img = pygame.image.load("images/light_rat.png")
+                img = pygame.image.load(resource_path('images/light_rat.png'))
         else:
             if self.phenotype[2] == "M":
-                img = pygame.image.load("images/albino_metabolic.png")
+                img = pygame.image.load(resource_path('images/albino_metabolic.png'))
             else:
-                img = pygame.image.load("images/albino_rat.png")
+                img = pygame.image.load(resource_path('images/albino_rat.png'))
 
         if self.phenotype[2] == "R":
             return pygame.transform.scale(img, (self._size, self._size))

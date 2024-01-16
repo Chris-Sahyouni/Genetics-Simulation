@@ -1,6 +1,6 @@
 import pygame
 import numpy as np
-
+from utils import resource_path
 
 class Predator(pygame.sprite.Sprite):
 
@@ -17,7 +17,7 @@ class Predator(pygame.sprite.Sprite):
 
 
     def setImage(self):
-        img = pygame.image.load('images/predator.png')
+        img = pygame.image.load(resource_path('images/predator.png'))
         return pygame.transform.scale(img, (50, 50))
 
 
